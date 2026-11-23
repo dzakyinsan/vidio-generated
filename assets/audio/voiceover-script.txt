@@ -1,0 +1,52 @@
+================================================================
+SCRIPT VOICEOVER — DEMO BIOGAS EXPLAINER (TOTAL DURASI: 24 DETIK)
+================================================================
+Gaya bicara : Santai, antusias, jelas (tempo ~150 kata/menit)
+Sinkron     : src/scenes/demoBiogas.js & src/scenes/subtitles.js
+
+----------------------------------------------------------------
+1. VERSI BERTIMESTAMP (Untuk rekam sendiri / edit di CapCut / Audacity)
+----------------------------------------------------------------
+[00:00.2 - 00:03.3]  Kalau kamu gali lubang di halaman rumah,
+[00:03.5 - 00:06.8]  terus buang sisa dapur kayak kulit buah dan sayuran,
+[00:07.1 - 00:10.3]  pas musim hujan lubangnya banjir dan bau busuk.
+[00:10.6 - 00:14.6]  Jadi tanam tangki tertutup supaya bakteri ngeluarin gas metana.
+[00:15.0 - 00:19.2]  Sambung pipa ke kompor, dan apinya nyala biru buat masak.
+[00:19.6 - 00:23.6]  Selamat! Kamu udah punya instalasi biogas sendiri.
+
+----------------------------------------------------------------
+2. VERSI COPY-PASTE POLOS (Untuk ElevenLabs / TTSMaker / CapCut TTS)
+----------------------------------------------------------------
+Kalau kamu gali lubang di halaman rumah,
+terus buang sisa dapur kayak kulit buah dan sayuran,
+pas musim hujan lubangnya banjir dan bau busuk.
+
+Jadi tanam tangki tertutup supaya bakteri ngeluarin gas metana.
+Sambung pipa ke kompor, dan apinya nyala biru buat masak.
+Selamat! Kamu udah punya instalasi biogas sendiri.
+
+----------------------------------------------------------------
+3. VERSI SSML (Untuk Azure / Edge TTS / Google Cloud TTS agar jeda presisi)
+----------------------------------------------------------------
+<speak version="1.0" xml:lang="id-ID">
+  <break time="200ms"/>
+  Kalau kamu gali lubang di halaman rumah,
+  <break time="300ms"/>
+  terus buang sisa dapur kayak kulit buah dan sayuran,
+  <break time="400ms"/>
+  pas musim hujan lubangnya banjir dan bau busuk.
+  <break time="400ms"/>
+  Jadi tanam tangki tertutup supaya bakteri ngeluarin gas metana.
+  <break time="450ms"/>
+  Sambung pipa ke kompor, dan apinya nyala biru buat masak.
+  <break time="450ms"/>
+  Selamat! Kamu udah punya instalasi biogas sendiri.
+</speak>
+
+----------------------------------------------------------------
+CATATAN PENGGUNAAN:
+1. Simpan hasil rekaman/TTS sebagai: assets/audio/voiceover.mp3
+2. Cek sinkronisasi di Live Preview (npm run preview -> http://localhost:8787)
+3. Jika ada kalimat yang lebih cepat/lambat, cukup geser angka
+   start & end di file src/scenes/subtitles.js.
+================================================================

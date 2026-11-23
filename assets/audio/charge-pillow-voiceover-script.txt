@@ -1,0 +1,32 @@
+================================================================
+SCRIPT VOICEOVER — NGECAS HP DI BAWAH BANTAL / KASUR (31 DETIK)
+================================================================
+Gaya bicara : Santai, informatif, sedikit dramatis saat overheat
+Sinkron     : src/scenes/chargePillow.js & src/scenes/chargePillowSubtitles.js
+
+----------------------------------------------------------------
+1. VERSI BERTIMESTAMP
+----------------------------------------------------------------
+[00:00.1 - 00:03.6]  Pernah ngecas HP sambil ditaruh di kasur atau bawah bantal?
+[00:03.8 - 00:07.6]  Saat diisi daya, baterai HP pasti menghasilkan panas alami.
+[00:07.9 - 00:12.4]  Masalahnya, bantal dan kasur itu isolator yang memerangkap panas.
+[00:12.7 - 00:17.7]  Suhu terus naik hingga separator baterai meleleh dan memicu thermal runaway.
+[00:18.0 - 00:22.2]  Baterai bisa berasap, terbakar, dan langsung menyambar kain kasur.
+[00:22.6 - 00:27.4]  Selalu cas HP di meja datar terbuka supaya panasnya cepat terbuang!
+[00:27.7 - 00:30.6]  Follow untuk fakta menarik lainnya!
+
+----------------------------------------------------------------
+2. VERSI SIAP PASTE KE ELEVENLABS (Multilingual v2, Speed ~1.02)
+----------------------------------------------------------------
+Pernah ngecas HP sambil ditaruh di kasur atau bawah bantal? <break time="0.3s" />
+Saat diisi daya, baterai HP pasti menghasilkan panas alami. <break time="0.3s" />
+Masalahnya, bantal dan kasur itu isolator yang memerangkap panas. <break time="0.4s" />
+Suhu terus naik hingga separator baterai meleleh dan memicu thermal runaway. <break time="0.3s" />
+Baterai bisa berasap, terbakar, dan langsung menyambar kain kasur. <break time="0.4s" />
+Selalu cas HP di meja datar terbuka supaya panasnya cepat terbuang! <break time="0.3s" />
+Follow untuk fakta menarik lainnya!
+
+----------------------------------------------------------------
+CATATAN:
+Simpan file hasil ElevenLabs ke: assets/audio/voiceover-charge.mp3
+================================================================

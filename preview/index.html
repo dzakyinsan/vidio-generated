@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canvas Video Studio — Live Preview</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #12141a;
+      color: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      padding: 20px;
+    }
+    .stage {
+      position: relative;
+      height: 90vh;
+      aspect-ratio: 9 / 16;
+      background: #000;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+      border: 1px solid #2b3040;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .safe-zone {
+      display: none;
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-top: 10% solid rgba(255, 0, 80, 0.18);
+      border-bottom: 18% solid rgba(255, 0, 80, 0.18);
+      border-right: 14% solid rgba(255, 0, 80, 0.14);
+    }
+    .safe-zone.show { display: block; }
+    .panel {
+      width: 350px;
+      background: #1b1f2a;
+      border: 1px solid #2b3040;
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    h1 { font-size: 18px; font-weight: 700; }
+    .meta { font-size: 13px; color: #94a3b8; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; }
+    button {
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    button:hover { background: #2563eb; }
+    button.secondary { background: #2b3245; color: #e2e8f0; }
+    button.secondary:hover { background: #374151; }
+    input[type="range"] { width: 100%; accent-color: #3b82f6; }
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+    .markers {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .markers button {
+      text-align: left;
+      background: #232836;
+      font-weight: 500;
+      padding: 7px 11px;
+    }
+    .markers button:hover { background: #2f374a; }
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #cbd5e1;
+      cursor: pointer;
+    }
+    .audio-box {
+      background: #141821;
+      border: 1px solid #262c3c;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 12px;
+      color: #94a3b8;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .audio-box strong { color: #e2e8f0; font-size: 13px; }
+    .track-ok { color: #4ade80; }
+    .track-miss { color: #64748b; }
+    select {
+      width: 100%;
+      background: #141821;
+      color: #f1f5f9;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .render-hint {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 11px;
+      background: #11151d;
+      color: #93c5fd;
+      padding: 7px 9px;
+      border-radius: 6px;
+      border: 1px solid #262c3c;
+      user-select: all;
+    }
+    button.export {
+      background: #16a34a;
+      flex: 1;
+    }
+    button.export:hover { background: #15803d; }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    .progress-wrap {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      background: #141821;
+      border: 1px solid #262c3c;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+    .progress-wrap.show { display: flex; }
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: #232836;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #22c55e;
+      transition: width 0.15s linear;
+    }
+    .download-link {
+      color: #4ade80;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <canvas id="canvas"></canvas>
+    <div id="safeZone" class="safe-zone"></div>
+  </div>
+
+  <div class="panel">
+    <div>
+      <h1>Canvas Video Preview</h1>
+      <p class="meta" id="metaInfo"></p>
+    </div>
+
+    <div>
+      <p class="meta" style="margin-bottom: 6px;">Pilih Video:</p>
+      <select id="sceneSelect"></select>
+    </div>
+
+    <div class="controls">
+      <button id="playBtn">Play</button>
+      <button id="restartBtn" class="secondary">Restart</button>
+      <button id="stepBackBtn" class="secondary">-1f</button>
+      <button id="stepFwdBtn" class="secondary">+1f</button>
+      <button id="muteBtn" class="secondary">Suara: ON</button>
+    </div>
+
+    <div>
+      <input id="scrubber" type="range" min="0" max="100" step="0.01" value="0" />
+      <div class="time-row">
+        <span id="timeLabel">0.00s</span>
+        <span id="frameLabel">Frame 0</span>
+      </div>
+    </div>
+
+    <label>
+      <input type="checkbox" id="safeToggle" />
+      Tampilkan Safe Zone TikTok / Reels
+    </label>
+
+    <div class="audio-box">
+      <strong>Audio Tracks</strong>
+      <div id="audioStatus">Memeriksa file audio...</div>
+    </div>
+
+    <div>
+      <p class="meta" style="margin-bottom: 8px;">Lompat ke Scene:</p>
+      <div class="markers" id="markers"></div>
+    </div>
+
+    <div>
+      <p class="meta" style="margin-bottom: 8px;">Export & Download MP4:</p>
+      <div class="controls">
+        <button id="exportHdBtn" class="export">Download MP4 (Full HD)</button>
+        <button id="exportDraftBtn" class="secondary">Draft 540p</button>
+      </div>
+      <div class="progress-wrap" id="progressWrap" style="margin-top: 10px;">
+        <span id="progressText">Menyiapkan render...</span>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="meta" style="margin-bottom: 6px;">Atau via Terminal:</p>
+      <div class="render-hint" id="renderHint"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getVideoConfig, SCENE_PRESETS, VIDEO_CONFIG } from '/config.js';
+    import { renderFrame } from '/src/renderFrame.js';
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    const sceneSelect = document.getElementById('sceneSelect');
+    const renderHint = document.getElementById('renderHint');
+    const exportHdBtn = document.getElementById('exportHdBtn');
+    const exportDraftBtn = document.getElementById('exportDraftBtn');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressText = document.getElementById('progressText');
+    const progressFill = document.getElementById('progressFill');
+    const playBtn = document.getElementById('playBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const stepBackBtn = document.getElementById('stepBackBtn');
+    const stepFwdBtn = document.getElementById('stepFwdBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const scrubber = document.getElementById('scrubber');
+    const timeLabel = document.getElementById('timeLabel');
+    const frameLabel = document.getElementById('frameLabel');
+    const metaInfo = document.getElementById('metaInfo');
+    const markersEl = document.getElementById('markers');
+    const safeToggle = document.getElementById('safeToggle');
+    const safeZone = document.getElementById('safeZone');
+    const audioStatus = document.getElementById('audioStatus');
+
+    let activeConfig = VIDEO_CONFIG;
+    let watermarkImg = null;
+    canvas.width = activeConfig.width;
+    canvas.height = activeConfig.height;
+
+    function loadWatermark(cfg) {
+      if (!cfg.watermark || cfg.watermark.enabled === false || !cfg.watermark.file) {
+        watermarkImg = null;
+        cfg._watermarkImage = null;
+        return;
+      }
+      if (watermarkImg && watermarkImg._src === cfg.watermark.file) {
+        cfg._watermarkImage = watermarkImg;
+        return;
+      }
+      const img = new Image();
+      img._src = cfg.watermark.file;
+      img.onload = () => {
+        watermarkImg = img;
+        activeConfig._watermarkImage = img;
+        draw();
+      };
+      img.src = '/' + cfg.watermark.file.replace(/^\/+/, '');
+    }
+
+    // Isi dropdown dari SCENE_PRESETS
+    for (const [key, preset] of Object.entries(SCENE_PRESETS)) {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = preset.title || key;
+      if (key === activeConfig.scene) opt.selected = true;
+      sceneSelect.appendChild(opt);
+    }
+
+    // --- Web Audio Multi-Track Engine (sinkron dengan timeline) ---
+    let audioCtx = null;
+    let masterGain = null;
+    let loadedTracks = [];
+    let activeSources = [];
+    let isMuted = false;
+    let audioLoadToken = 0;
+
+    function ensureAudioCtx() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = isMuted ? 0 : 1;
+        masterGain.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    async function preloadAudioTracks() {
+      const token = ++audioLoadToken;
+      loadedTracks = [];
+      audioStatus.textContent = 'Memuat file audio...';
+
+      const cfg = activeConfig.audio || {};
+      const candidates = [];
+      if (cfg.voiceover?.file) candidates.push({ label: 'Voiceover', ...cfg.voiceover });
+      if (cfg.bgm?.file) candidates.push({ label: 'BGM', ...cfg.bgm });
+      if (Array.isArray(cfg.sfx)) {
+        cfg.sfx.forEach((s, i) => {
+          if (s?.file) candidates.push({ label: `SFX #${i + 1}`, ...s });
+        });
+      }
+
+      if (candidates.length === 0) {
+        audioStatus.textContent = 'Belum ada track dikonfigurasi di config.js.';
+        return;
+      }
+
+      const tempCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(2, 44100, 44100);
+      const rows = [];
+      const nextLoaded = [];
+
+      for (const item of candidates) {
+        try {
+          const res = await fetch('/' + item.file.replace(/^\/+/, ''));
+          if (!res.ok) throw new Error('404');
+          const arr = await res.arrayBuffer();
+          const buffer = await tempCtx.decodeAudioData(arr);
+          nextLoaded.push({ ...item, buffer });
+          rows.push(`<div class="track-ok">✓ ${item.label}: ${item.file}</div>`);
+        } catch {
+          rows.push(`<div class="track-miss">○ ${item.label}: ${item.file} (belum ada)</div>`);
+        }
+      }
+
+      if (token !== audioLoadToken) return; // Abaikan jika user sudah ganti video lagi
+      loadedTracks = nextLoaded;
+      audioStatus.innerHTML = rows.join('');
+    }
+
+    function stopAllAudio() {
+      for (const src of activeSources) {
+        try { src.stop(); } catch {}
+      }
+      activeSources = [];
+    }
+
+    function startAudioFrom(videoTime) {
+      stopAllAudio();
+      if (loadedTracks.length === 0 || isMuted) return;
+      ensureAudioCtx();
+
+      const now = audioCtx.currentTime;
+      for (const track of loadedTracks) {
+        const startSec = Number(track.start || 0);
+        const endSec = track.end !== undefined ? track.end : activeConfig.duration;
+        if (videoTime >= endSec) continue;
+
+        const src = audioCtx.createBufferSource();
+        src.buffer = track.buffer;
+        src.loop = Boolean(track.loop);
+
+        const gain = audioCtx.createGain();
+        gain.gain.value = track.volume ?? 1.0;
+        src.connect(gain);
+        gain.connect(masterGain);
+
+        if (videoTime < startSec) {
+          const delay = startSec - videoTime;
+          const dur = Math.max(0.05, endSec - startSec);
+          src.start(now + delay, 0, track.loop ? dur : Math.min(dur, track.buffer.duration));
+        } else {
+          const elapsed = videoTime - startSec;
+          const offset = track.loop ? elapsed % track.buffer.duration : elapsed;
+          const remain = endSec - videoTime;
+          if (!track.loop && offset >= track.buffer.duration) continue;
+          src.start(now, offset, track.loop ? remain : Math.min(remain, track.buffer.duration - offset));
+        }
+
+        activeSources.push(src);
+      }
+    }
+
+    // --- Timeline & Render Loop ---
+    let currentTime = 0;
+    let isPlaying = false;
+    let lastTimestamp = null;
+
+    function draw() {
+      renderFrame(ctx, currentTime, activeConfig);
+      scrubber.value = currentTime;
+      timeLabel.textContent = `${currentTime.toFixed(2)}s / ${activeConfig.duration}s`;
+      frameLabel.textContent = `Frame ${Math.floor(currentTime * activeConfig.fps)}`;
+    }
+
+    function rebuildMarkers() {
+      markersEl.innerHTML = '';
+      for (const m of activeConfig.markers || []) {
+        const btn = document.createElement('button');
+        btn.textContent = `${m.label} (${m.time}s)`;
+        btn.addEventListener('click', () => {
+          currentTime = m.time;
+          draw();
+          if (isPlaying) startAudioFrom(currentTime);
+        });
+        markersEl.appendChild(btn);
+      }
+    }
+
+    function applyScene(sceneKey) {
+      setPlaying(false);
+      activeConfig = getVideoConfig(sceneKey);
+      loadWatermark(activeConfig);
+      canvas.width = activeConfig.width;
+      canvas.height = activeConfig.height;
+      metaInfo.textContent = `${activeConfig.width}×${activeConfig.height} • ${activeConfig.fps} FPS • ${activeConfig.duration}s`;
+      scrubber.max = activeConfig.duration;
+      renderHint.textContent = `npm run render -- --scene ${activeConfig.scene}`;
+      currentTime = 0;
+      rebuildMarkers();
+      draw();
+      preloadAudioTracks();
+    }
+
+    function loop(ts) {
+      if (isPlaying) {
+        if (lastTimestamp !== null) {
+          const dt = (ts - lastTimestamp) / 1000;
+          currentTime += dt;
+          if (currentTime > activeConfig.duration) {
+            currentTime = 0;
+            startAudioFrom(0);
+          }
+        }
+        lastTimestamp = ts;
+        draw();
+      } else {
+        lastTimestamp = null;
+      }
+      requestAnimationFrame(loop);
+    }
+
+    function setPlaying(next) {
+      isPlaying = next;
+      playBtn.textContent = isPlaying ? 'Pause' : 'Play';
+      if (isPlaying) {
+        startAudioFrom(currentTime);
+      } else {
+        stopAllAudio();
+      }
+    }
+
+    sceneSelect.addEventListener('change', (e) => applyScene(e.target.value));
+
+    function startExport(scale) {
+      setPlaying(false);
+      exportHdBtn.disabled = true;
+      exportDraftBtn.disabled = true;
+      sceneSelect.disabled = true;
+      progressWrap.classList.add('show');
+      progressFill.style.width = '0%';
+      progressText.textContent = 'Memulai render MP4...';
+
+      const url = `/api/render?scene=${encodeURIComponent(activeConfig.scene)}&scale=${scale}`;
+      const es = new EventSource(url);
+
+      const finishUI = () => {
+        es.close();
+        exportHdBtn.disabled = false;
+        exportDraftBtn.disabled = false;
+        sceneSelect.disabled = false;
+      };
+
+      es.onmessage = (ev) => {
+        const data = JSON.parse(ev.data);
+        if (data.type === 'status' || data.type === 'progress') {
+          progressFill.style.width = `${data.pct || 0}%`;
+          progressText.textContent = data.message;
+        } else if (data.type === 'done') {
+          progressFill.style.width = '100%';
+          progressText.innerHTML = `Selesai! <a class="download-link" href="${data.downloadUrl}" download="${data.filename}">Klik jika ${data.filename} belum terunduh</a>`;
+          finishUI();
+          // Trigger auto-download MP4 di browser
+          const a = document.createElement('a');
+          a.href = data.downloadUrl;
+          a.download = data.filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        } else if (data.type === 'error') {
+          progressText.textContent = `Gagal: ${data.message}`;
+          finishUI();
+        }
+      };
+
+      es.onerror = () => {
+        progressText.textContent = 'Koneksi ke server render terputus. Coba restart server (Ctrl+C lalu "npm run preview").';
+        finishUI();
+      };
+    }
+
+    exportHdBtn.addEventListener('click', () => startExport(1));
+    exportDraftBtn.addEventListener('click', () => startExport(0.5));
+    playBtn.addEventListener('click', () => setPlaying(!isPlaying));
+    restartBtn.addEventListener('click', () => {
+      currentTime = 0;
+      draw();
+      if (isPlaying) startAudioFrom(0);
+    });
+    stepBackBtn.addEventListener('click', () => {
+      setPlaying(false);
+      currentTime = Math.max(0, currentTime - 1 / activeConfig.fps);
+      draw();
+    });
+    stepFwdBtn.addEventListener('click', () => {
+      setPlaying(false);
+      currentTime = Math.min(activeConfig.duration, currentTime + 1 / activeConfig.fps);
+      draw();
+    });
+    muteBtn.addEventListener('click', () => {
+      isMuted = !isMuted;
+      muteBtn.textContent = isMuted ? 'Suara: OFF' : 'Suara: ON';
+      if (masterGain) masterGain.gain.value = isMuted ? 0 : 1;
+      if (!isMuted && isPlaying) startAudioFrom(currentTime);
+      if (isMuted) stopAllAudio();
+    });
+    scrubber.addEventListener('input', (e) => {
+      currentTime = Number(e.target.value);
+      draw();
+      if (isPlaying) startAudioFrom(currentTime);
+    });
+    safeToggle.addEventListener('change', (e) => {
+      safeZone.classList.toggle('show', e.target.checked);
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && document.activeElement !== sceneSelect) {
+        e.preventDefault();
+        setPlaying(!isPlaying);
+      }
+    });
+
+    applyScene(activeConfig.scene);
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

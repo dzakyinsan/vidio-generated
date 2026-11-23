@@ -1,0 +1,30 @@
+================================================================
+SCRIPT VOICEOVER — MAKAN MALAM BIKIN GEMUK? (32 DETIK)
+================================================================
+Gaya bicara : Santai, penasaran di awal, tegas saat fakta, ramah di akhir
+Sinkron     : src/scenes/lateDinner.js & src/scenes/lateDinnerSubtitles.js
+
+----------------------------------------------------------------
+1. VERSI BERTIMESTAMP (APA -> KENAPA -> BAGAIMANA)
+----------------------------------------------------------------
+[00:00.1 - 00:03.6]  (HOOK) Katanya makan di atas jam tujuh malam otomatis bikin gemuk. Mitos atau fakta?
+[00:03.9 - 00:10.2]  (APA) Faktanya, lima ratus lima puluh kalori di jam enam sore atau sembilan malam itu sama saja. Kuncinya total kalori harian.
+[00:10.5 - 00:15.8]  (KENAPA #1) Tapi studi Harvard menemukan makan terlalu larut mengacaukan ritme sirkadian, bikin hormon lapar naik dan gampang surplus kalori.
+[00:16.1 - 00:21.8]  (KENAPA #2) Bahaya lainnya, kalau langsung rebahan, asam lambung mudah naik memicu GERD dan mengganggu kualitas tidur.
+[00:22.1 - 00:28.2]  (BAGAIMANA) Jadi patokannya bukan jam tujuh, tapi beri jeda dua sampai tiga jam sebelum tidur dan jaga total kalori harianmu.
+[00:28.5 - 00:31.6]  (CTA) Follow untuk fakta menarik lainnya!
+
+----------------------------------------------------------------
+2. VERSI SIAP PASTE KE ELEVENLABS (Multilingual v2, Speed ~1.05)
+----------------------------------------------------------------
+Katanya makan di atas jam tujuh malam otomatis bikin gemuk. Mitos atau fakta? <break time="0.3s" />
+Faktanya, lima ratus lima puluh kalori di jam enam sore atau sembilan malam itu sama saja. Kuncinya total kalori harian. <break time="0.3s" />
+Tapi studi Harvard menemukan makan terlalu larut mengacaukan ritme sirkadian, bikin hormon lapar naik dan gampang surplus kalori. <break time="0.3s" />
+Bahaya lainnya, kalau langsung rebahan, asam lambung mudah naik memicu GERD dan mengganggu kualitas tidur. <break time="0.3s" />
+Jadi patokannya bukan jam tujuh, tapi beri jeda dua sampai tiga jam sebelum tidur dan jaga total kalori harianmu. <break time="0.3s" />
+Follow untuk fakta menarik lainnya!
+
+----------------------------------------------------------------
+CATATAN:
+Simpan file hasil ElevenLabs ke: assets/audio/voiceover-late-dinner.mp3
+================================================================
