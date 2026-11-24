@@ -1,0 +1,32 @@
+================================================================
+SCRIPT VOICEOVER — MEMANASKAN MESIN LAMA TIAP PAGI (48 DETIK)
+================================================================
+Gaya bicara : Santai, relatable di awal, tegas saat bahaya digeber, ramah di akhir
+Sinkron     : src/scenes/engineWarmup.js & src/scenes/engineWarmupSubtitles.js
+
+----------------------------------------------------------------
+1. VERSI BERTIMESTAMP
+----------------------------------------------------------------
+[00:00.1 - 00:04.0]  Masih suka manasin mesin sampai sepuluh menit tiap pagi?
+[00:04.2 - 00:07.8]  Sebenarnya itu perlu atau malah buang-buang bensin?
+[00:08.2 - 00:16.8]  Tujuan manasin mesin cuma satu: biar oli naik dari bawah dan melumasi piston serta dinding silinder — dan itu cuma butuh sekitar tiga puluh detik!
+[00:17.2 - 00:24.6]  Yang bahaya justru kalau mesin baru nyala langsung digeber! Oli belum merata bisa bikin dinding silinder cepat baret.
+[00:25.0 - 00:34.2]  Sementara idle terlalu lama bikin bensin habis di tempat, kerak karbon menumpuk, dan mesin panas tanpa angin jalan.
+[00:34.6 - 00:44.0]  Untuk motor dan mobil injeksi modern, cukup tiga puluh sampai enam puluh detik, lalu langsung jalan santai biar suhu mesin naik alami!
+[00:44.4 - 00:47.6]  Follow untuk fakta menarik lainnya!
+
+----------------------------------------------------------------
+2. VERSI SIAP PASTE KE ELEVENLABS (Multilingual v2, Speed ~1.03)
+----------------------------------------------------------------
+Masih suka manasin mesin sampai sepuluh menit tiap pagi? <break time="0.2s" />
+Sebenarnya itu perlu atau malah buang-buang bensin? <break time="0.3s" />
+Tujuan manasin mesin cuma satu: biar oli naik dari bawah dan melumasi piston serta dinding silinder, dan itu cuma butuh sekitar tiga puluh detik! <break time="0.3s" />
+Yang bahaya justru kalau mesin baru nyala langsung digeber! Oli belum merata bisa bikin dinding silinder cepat baret. <break time="0.3s" />
+Sementara idle terlalu lama bikin bensin habis di tempat, kerak karbon menumpuk, dan mesin panas tanpa angin jalan. <break time="0.3s" />
+Untuk motor dan mobil injeksi modern, cukup tiga puluh sampai enam puluh detik, lalu langsung jalan santai biar suhu mesin naik alami! <break time="0.3s" />
+Follow untuk fakta menarik lainnya!
+
+----------------------------------------------------------------
+CATATAN:
+Simpan file hasil ElevenLabs ke: assets/audio/voiceover-warmup.mp3
+================================================================

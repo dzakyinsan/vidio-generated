@@ -1,0 +1,36 @@
+================================================================
+SCRIPT VOICEOVER — CAMPUR PERTAMAX & PERTALITE (STORY 50 DETIK)
+================================================================
+Gaya bicara : Bercerita santai di awal (SPBU), informatif saat masuk mesin
+Sinkron     : src/scenes/fuelMixEngine.js & src/scenes/fuelMixEngineSubtitles.js
+
+----------------------------------------------------------------
+1. VERSI BERTIMESTAMP
+----------------------------------------------------------------
+[00:00.1 - 00:03.6]  (SPBU) Pernah lihat orang isi bensin lalu minta dicampur Pertalite sama Pertamax?
+[00:03.8 - 00:07.3]  (HOOK) Aman atau malah diam-diam merusak mesin? Yuk kita intip ke dalam!
+[00:07.6 - 00:14.3]  (TANGKI) Di dalam tangki, keduanya langsung menyatu jadi oktan sekitar sembilan puluh satu, tapi aditif pembersih Pertamax ikut encer.
+[00:14.6 - 00:20.8]  (ALIRAN) Campuran ini lalu dipompa melewati filter dan disemprot injektor menjadi kabut halus ke ruang bakar.
+[00:21.1 - 00:29.7]  (MESIN NORMAL) Normalnya, bensin sesuai kompresi baru terbakar tepat saat busi memercik, sehingga ledakan mendorong piston turun dengan mulus.
+[00:30.0 - 00:35.6]  (KNOCKING #1) Masalahnya, jika kompresi mesinmu tinggi lalu dioplos, bensin bisa meledak dini sebelum busi menyala.
+[00:35.8 - 00:40.3]  (KNOCKING #2) Akibatnya mesin ngelitik, piston terhentak, dan kerak karbon makin cepat menumpuk!
+[00:40.6 - 00:46.2]  (SARAN) Kalau darurat sekali-kali masih aman, tapi untuk harian sebaiknya konsisten satu jenis BBM sesuai kompresi mesin.
+[00:46.5 - 00:49.6]  (CTA) Follow untuk fakta menarik lainnya!
+
+----------------------------------------------------------------
+2. VERSI SIAP PASTE KE ELEVENLABS (Multilingual v2, Speed ~1.03)
+----------------------------------------------------------------
+Pernah lihat orang isi bensin lalu minta dicampur Pertalite sama Pertamax? <break time="0.2s" />
+Aman atau malah diam-diam merusak mesin? Yuk kita intip ke dalam! <break time="0.3s" />
+Di dalam tangki, keduanya langsung menyatu jadi oktan sekitar sembilan puluh satu, tapi aditif pembersih Pertamax ikut encer. <break time="0.3s" />
+Campuran ini lalu dipompa melewati filter dan disemprot injektor menjadi kabut halus ke ruang bakar. <break time="0.3s" />
+Normalnya, bensin sesuai kompresi baru terbakar tepat saat busi memercik, sehingga ledakan mendorong piston turun dengan mulus. <break time="0.3s" />
+Masalahnya, jika kompresi mesinmu tinggi lalu dioplos, bensin bisa meledak dini sebelum busi menyala. <break time="0.2s" />
+Akibatnya mesin ngelitik, piston terhentak, dan kerak karbon makin cepat menumpuk! <break time="0.3s" />
+Kalau darurat sekali-kali masih aman, tapi untuk harian sebaiknya konsisten satu jenis BBM sesuai kompresi mesin. <break time="0.3s" />
+Follow untuk fakta menarik lainnya!
+
+----------------------------------------------------------------
+CATATAN:
+Simpan file hasil ElevenLabs ke: assets/audio/voiceover-fuel-mix.mp3
+================================================================

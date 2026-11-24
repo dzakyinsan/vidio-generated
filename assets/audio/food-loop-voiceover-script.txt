@@ -1,0 +1,24 @@
+================================================================
+SCRIPT VOICEOVER — CERITA RANI: LIMBAH DAPUR JADI MAKANAN LAGI (62 DETIK)
+================================================================
+Gaya bicara : Santai, hangat, bercerita (storytelling), tidak kaku
+Sinkron     : src/scenes/foodLoop.js & src/scenes/foodLoopSubtitles.js
+
+----------------------------------------------------------------
+1. VERSI SIAP PASTE KE ELEVENLABS (Multilingual v2, Speed ~1.03)
+----------------------------------------------------------------
+Kenalan sama Rani. Setiap kali selesai masak di dapur, kulit sayur, pangkal daun bawang, dan akar selada langsung ia buang ke tempat sampah. <break time="0.2s" />
+Kelihatannya sepele, tapi ternyata banyak banget bahan bagus yang terbuang percuma! <break time="0.3s" />
+Sampai suatu hari, Rani kepikiran: gimana kalau sisa dapur ini bisa jadi makanan lagi? Daripada dibuang semua, Rani mulai memilah sisa sayuran sesuai potensinya. <break time="0.3s" />
+Pangkal daun bawang, seledri, dan selada ia rendam di gelas air pakai metode regrowing. <break time="0.2s" />
+Sementara kulit buah dan sisa sayur lainnya Rani olah jadi kompos organik penyubur tanaman. <break time="0.3s" />
+Cukup pakai wadah sederhana, sedikit air, tanah, dan kompos buatannya sendiri, Rani rutin menyiramnya — dan sisa dapur tadi pelan-pelan tumbuh jadi tanaman baru! <break time="0.3s" />
+Setelah dirawat dengan telaten, akhirnya sayuran segar ini siap dipanen! Sampah dapurnya berkurang jauh, dan Rani dapat bahan makanan gratis dari rumah sendiri. <break time="0.3s" />
+Sayur hasil panen langsung kembali ke dapur, dimasak hangat untuk keluarga tercinta. <break time="0.2s" />
+Siklusnya terus berputar dari dapur — lebih sedikit sampah, lebih banyak manfaat. <break time="0.3s" />
+Follow untuk fakta menarik lainnya!
+
+----------------------------------------------------------------
+CATATAN:
+Simpan file hasil ElevenLabs ke: assets/audio/voiceover-food-loop.mp3
+================================================================

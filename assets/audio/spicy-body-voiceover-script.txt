@@ -1,0 +1,22 @@
+================================================================
+SCRIPT VOICEOVER — APA YANG TERJADI SAAT MAKAN PEDAS? (47 DETIK)
+================================================================
+Gaya bicara : Seru, ekspresif, bikin kaget di awal, jelas & praktis di akhir
+Sinkron     : src/scenes/spicyBody.js & src/scenes/spicyBodySubtitles.js
+
+----------------------------------------------------------------
+1. VERSI SIAP PASTE KE ELEVENLABS (Multilingual v2, Speed ~1.03)
+----------------------------------------------------------------
+Tahukah kamu? Pedas itu sebenarnya bukan rasa — tubuhmu cuma lagi ditipu oleh cabai! <break time="0.3s" />
+Saat kamu makan terlalu pedas, zat kapsaisin menempel di reseptor panas lidah dan tenggorokan. <break time="0.2s" />
+Otak langsung menerima sinyal palsu seolah tenggorokanmu sedang terbakar api! <break time="0.3s" />
+Karena panik mengira tubuh kepanasan, otak langsung menyalakan mode pendinginan darurat: pembuluh darah wajah melebar jadi merah, dan keringat mengucur deras! <break time="0.3s" />
+Saraf wajah juga ikut terpicu iritasi, memaksa tubuh masuk mode bilas — makanya matamu tiba-tiba berair dan hidung ikut meler! <break time="0.3s" />
+Nah, jangan minum air putih karena kapsaisin berbasis minyak dan malah menyebar. <break time="0.2s" />
+Minumlah susu! Protein kasein di dalamnya langsung mengikat dan menyapu rasa panasnya. <break time="0.3s" />
+Follow untuk fakta menarik lainnya!
+
+----------------------------------------------------------------
+CATATAN:
+Simpan file hasil ElevenLabs ke: assets/audio/voiceover-spicy.mp3
+================================================================

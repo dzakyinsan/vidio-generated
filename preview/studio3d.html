@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canvas Studio 3D (Three.js WebGL)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #0b0f17;
+      color: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      padding: 20px;
+    }
+    .stage {
+      position: relative;
+      height: 90vh;
+      aspect-ratio: 9 / 16;
+      background: #000;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+      border: 1px solid #2b3040;
+    }
+    #compositeCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .panel {
+      width: 350px;
+      background: #161b26;
+      border: 1px solid #2b3040;
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    h1 { font-size: 18px; font-weight: 800; }
+    .badge {
+      display: inline-block;
+      background: #7c3aed;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 99px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .meta { font-size: 13px; color: #94a3b8; line-height: 1.45; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; }
+    button, a.btn {
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      text-decoration: none;
+      text-align: center;
+    }
+    button:hover, a.btn:hover { background: #2563eb; }
+    button.secondary, a.btn.secondary { background: #2b3245; color: #e2e8f0; }
+    button.secondary:hover, a.btn.secondary:hover { background: #374151; }
+    button.export { background: #16a34a; flex: 1; }
+    button.export:hover { background: #15803d; }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    input[type="range"] { width: 100%; accent-color: #7c3aed; }
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+    .status-box {
+      background: #0f141e;
+      border: 1px solid #262c3c;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #93c5fd;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.170.0/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="stage">
+    <canvas id="compositeCanvas" width="1080" height="1920"></canvas>
+  </div>
+
+  <div class="panel">
+    <div>
+      <h1>Studio 3D <span class="badge">Three.js WebGL</span></h1>
+      <p class="meta">Mesin 4-Tak 3D Realistis (PBR Metal, Kaca Transparan, Lighting, Kamera 3D Sinematik + Watermark).</p>
+    </div>
+
+    <div class="controls">
+      <button id="playBtn">Pause</button>
+      <button id="restartBtn" class="secondary">Restart</button>
+      <button id="modeBtn" class="secondary">Mode: Normal</button>
+    </div>
+
+    <div>
+      <input id="scrubber" type="range" min="0" max="15" step="0.01" value="0" />
+      <div class="time-row">
+        <span id="timeLabel">0.00s / 15.0s</span>
+        <span id="strokeLabel">HISAP</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="recordBtn" class="export">Rekam & Download 3D (15s)</button>
+    </div>
+    <div class="status-box" id="statusBox">
+      Siap! Kamera 3D berputar otomatis mengelilingi mesin.
+    </div>
+
+    <a href="/" class="btn secondary">← Kembali ke Studio 2D</a>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { drawSubtitles } from '/src/engine/subtitle.js';
+
+    const W = 1080;
+    const H = 1920;
+    const DURATION = 15;
+
+    // 1. Offscreen WebGLRenderer untuk Three.js 3D
+    const glCanvas = document.createElement('canvas');
+    glCanvas.width = W;
+    glCanvas.height = H;
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: glCanvas,
+      antialias: true,
+      preserveDrawingBuffer: true,
+    });
+    renderer.setSize(W, H, false);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.25;
+    renderer.shadowMap.enabled = true;
+
+    // 2. Composite Canvas 2D (gabungkan hasil 3D + Watermark + Subtitle)
+    const compCanvas = document.getElementById('compositeCanvas');
+    const compCtx = compCanvas.getContext('2d');
+
+    const wmImg = new Image();
+    wmImg.src = '/assets/images/watermark-dark.png';
+
+    // 3. Scene & Kamera 3D (Suasana Pagi di Parkiran / Carport Rumah)
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x9bd0ec);
+    scene.fog = new THREE.FogExp2(0xc8e3f5, 0.018);
+
+    const camera = new THREE.PerspectiveCamera(40, W / H, 0.1, 120);
+
+    // 4. Pencahayaan Pagi Cerah + Studio Fill untuk Mesin
+    const hemiLight = new THREE.HemisphereLight(0xdbeafe, 0x94a3b8, 1.15);
+    scene.add(hemiLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfff4d6, 2.3);
+    sunLight.position.set(8, 12, 7);
+    sunLight.castShadow = true;
+    scene.add(sunLight);
+
+    const rimLight = new THREE.DirectionalLight(0x60a5fa, 1.1);
+    rimLight.position.set(-7, 5, -6);
+    scene.add(rimLight);
+
+    // Lampu ledakan ruang bakar dinamis
+    const combustionLight = new THREE.PointLight(0x38bdf8, 0, 10);
+    combustionLight.position.set(0, 1.8, 0);
+    scene.add(combustionLight);
+
+    // --- 4B. LINGKUNGAN 3D: PARKIRAN / CARPORT RUMAH ---
+    function createCarportFloorTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 512;
+      const g = c.getContext('2d');
+      g.fillStyle = '#9ca3af';
+      g.fillRect(0, 0, 512, 512);
+      g.strokeStyle = '#6b7280';
+      g.lineWidth = 4;
+      for (let i = 0; i <= 512; i += 64) {
+        g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 512); g.stroke();
+        g.beginPath(); g.moveTo(0, i); g.lineTo(512, i); g.stroke();
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(8, 8);
+      return tex;
+    }
+
+    const carportGroup = new THREE.Group();
+    scene.add(carportGroup);
+
+    // Lantai paving/beton parkiran rumah
+    const floorMat = new THREE.MeshStandardMaterial({
+      map: createCarportFloorTexture(),
+      roughness: 0.85,
+      metalness: 0.05,
+    });
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(45, 45), floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -3.45;
+    floor.receiveShadow = true;
+    carportGroup.add(floor);
+
+    // Rumput taman di sisi luar carport
+    const grass = new THREE.Mesh(
+      new THREE.PlaneGeometry(60, 18),
+      new THREE.MeshStandardMaterial({ color: 0x4d8b31, roughness: 0.95 })
+    );
+    grass.rotation.x = -Math.PI / 2;
+    grass.position.set(0, -3.44, 15);
+    carportGroup.add(grass);
+
+    // Dinding rumah di belakang parkiran (z = -6.5)
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0xf1e9dc, roughness: 0.8 });
+    const houseWall = new THREE.Mesh(new THREE.BoxGeometry(22, 11, 0.8), wallMat);
+    houseWall.position.set(0, 2.0, -6.8);
+    carportGroup.add(houseWall);
+
+    // Lis batu alam abu-abu di bagian bawah dinding
+    const plinth = new THREE.Mesh(
+      new THREE.BoxGeometry(22.1, 1.5, 0.9),
+      new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.9 })
+    );
+    plinth.position.set(0, -2.7, -6.8);
+    carportGroup.add(plinth);
+
+    // Pintu kayu rumah (kiri)
+    const doorFrame = new THREE.Mesh(
+      new THREE.BoxGeometry(2.5, 5.2, 0.2),
+      new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.7 })
+    );
+    doorFrame.position.set(-4.2, -0.8, -6.35);
+    carportGroup.add(doorFrame);
+    const doorWood = new THREE.Mesh(
+      new THREE.BoxGeometry(2.2, 4.9, 0.24),
+      new THREE.MeshStandardMaterial({ color: 0x8b5a36, roughness: 0.65 })
+    );
+    doorWood.position.set(-4.2, -0.85, -6.33);
+    carportGroup.add(doorWood);
+
+    // Jendela rumah (kanan)
+    const winFrame = new THREE.Mesh(
+      new THREE.BoxGeometry(3.6, 2.8, 0.2),
+      new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5 })
+    );
+    winFrame.position.set(3.8, 0.8, -6.35);
+    carportGroup.add(winFrame);
+    const winGlass = new THREE.Mesh(
+      new THREE.BoxGeometry(3.2, 2.4, 0.24),
+      new THREE.MeshStandardMaterial({ color: 0x7dd3fc, metalness: 0.4, roughness: 0.15 })
+    );
+    winGlass.position.set(3.8, 0.8, -6.33);
+    carportGroup.add(winGlass);
+
+    // Kanopi Carport (tiang besi gelap + atap polikarbonat transparan di atas)
+    const steelPostMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.7, roughness: 0.35 });
+    for (const px of [-6.8, 6.8]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.32, 9.2, 0.32), steelPostMat);
+      post.position.set(px, 1.1, 4.5);
+      carportGroup.add(post);
+      // Balok memanjang depan-belakang
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.32, 12.2), steelPostMat);
+      beam.position.set(px, 5.7, -1.2);
+      carportGroup.add(beam);
+    }
+    // Balok melintang kanopi
+    for (let bz = -5.5; bz <= 4.5; bz += 2.5) {
+      const cross = new THREE.Mesh(new THREE.BoxGeometry(14.2, 0.22, 0.22), steelPostMat);
+      cross.position.set(0, 5.75, bz);
+      carportGroup.add(cross);
+    }
+    // Atap kanopi polikarbonat agak transparan
+    const canopyRoof = new THREE.Mesh(
+      new THREE.BoxGeometry(14.5, 0.08, 12.4),
+      new THREE.MeshPhysicalMaterial({ color: 0x334155, transparent: true, opacity: 0.35, roughness: 0.2 })
+    );
+    canopyRoof.position.set(0, 5.9, -1.2);
+    carportGroup.add(canopyRoof);
+
+    // Pot tanaman hias di sudut kanan parkiran
+    const pot = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.65, 0.45, 1.0, 18),
+      new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.8 })
+    );
+    pot.position.set(5.4, -2.95, -4.8);
+    carportGroup.add(pot);
+    const bushMat = new THREE.MeshStandardMaterial({ color: 0x2f855a, roughness: 0.85 });
+    for (const [ox, oy, oz, r] of [[0, 0.9, 0, 0.85], [-0.45, 0.65, 0.3, 0.55], [0.45, 0.75, -0.2, 0.6]]) {
+      const b = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 14), bushMat);
+      b.position.set(5.4 + ox, -2.95 + oy, -4.8 + oz);
+      carportGroup.add(b);
+    }
+
+    // Pagar rumah rendah di sisi kiri
+    const fenceMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.5, roughness: 0.5 });
+    const fenceRail = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.4, 11.5), fenceMat);
+    fenceRail.position.set(-7.6, -2.2, -0.8);
+    carportGroup.add(fenceRail);
+
+    // Dudukan / Stand bengkel kecil di bawah mesin 3D agar tidak melayang
+    const stand = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.45, 1.75, 0.35, 32),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.75, roughness: 0.3 })
+    );
+    stand.position.y = -3.28;
+    carportGroup.add(stand);
+
+    // 5. Material PBR Metal & Kaca
+    const aluminumMat = new THREE.MeshStandardMaterial({
+      color: 0xdbe4ee,
+      metalness: 0.85,
+      roughness: 0.24,
+    });
+    const darkSteelMat = new THREE.MeshStandardMaterial({
+      color: 0x334155,
+      metalness: 0.9,
+      roughness: 0.32,
+    });
+    const copperMat = new THREE.MeshStandardMaterial({
+      color: 0xd97706,
+      metalness: 0.8,
+      roughness: 0.25,
+    });
+    const glassCylinderMat = new THREE.MeshPhysicalMaterial({
+      color: 0x93c5fd,
+      metalness: 0.05,
+      roughness: 0.08,
+      transparent: true,
+      opacity: 0.22,
+      side: THREE.DoubleSide,
+    });
+
+    const engineGroup = new THREE.Group();
+    scene.add(engineGroup);
+
+    // --- Dinding Silinder Kaca Transparan + Sirip Pendingin Metalik ---
+    const cylGeo = new THREE.CylinderGeometry(1.18, 1.18, 3.1, 40, 1, true);
+    const cylinderMesh = new THREE.Mesh(cylGeo, glassCylinderMat);
+    cylinderMesh.position.y = 1.05;
+    engineGroup.add(cylinderMesh);
+
+    // Ring sirip pendingin luar (setengah terbuka agar isi terlihat jelas)
+    for (let i = 0; i < 6; i++) {
+      const finGeo = new THREE.CylinderGeometry(1.52, 1.52, 0.09, 32, 1, false, Math.PI * 0.65, Math.PI * 1.3);
+      const fin = new THREE.Mesh(finGeo, darkSteelMat);
+      fin.position.y = -0.15 + i * 0.45;
+      engineGroup.add(fin);
+    }
+
+    // Kepala Silinder (Cylinder Head)
+    const headGeo = new THREE.CylinderGeometry(1.38, 1.38, 0.42, 36);
+    const headMesh = new THREE.Mesh(headGeo, darkSteelMat);
+    headMesh.position.y = 2.75;
+    engineGroup.add(headMesh);
+
+    // --- Busi (Spark Plug) 3D di puncak tengah ---
+    const plugCeramic = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.14, 0.16, 0.72, 18),
+      new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 })
+    );
+    plugCeramic.position.y = 3.25;
+    engineGroup.add(plugCeramic);
+
+    const sparkSphere = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0x93c5fd, transparent: true, opacity: 0 })
+    );
+    sparkSphere.position.y = 2.45;
+    engineGroup.add(sparkSphere);
+
+    // --- 2 Klep (Intake Biru & Exhaust Oranye) ---
+    function makeValve(x, colorHex) {
+      const g = new THREE.Group();
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.2, 14), aluminumMat);
+      stem.position.y = 0.6;
+      const disc = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.32, 0.36, 0.09, 24),
+        new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.6, roughness: 0.25 })
+      );
+      g.add(stem, disc);
+      g.position.set(x, 2.52, 0);
+      engineGroup.add(g);
+      return g;
+    }
+    const intakeValve = makeValve(-0.52, 0x38bdf8);
+    const exhaustValve = makeValve(0.52, 0xfb923c);
+
+    // --- Piston 3D + 3 Ring Baja ---
+    const pistonGroup = new THREE.Group();
+    const pistonBody = new THREE.Mesh(new THREE.CylinderGeometry(1.08, 1.08, 1.05, 36), aluminumMat);
+    pistonGroup.add(pistonBody);
+
+    for (let r = 0; r < 3; r++) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.09, 0.035, 10, 36), darkSteelMat);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = 0.34 - r * 0.14;
+      pistonGroup.add(ring);
+    }
+    engineGroup.add(pistonGroup);
+
+    // --- Connecting Rod (Stang Piston 3D) ---
+    const rodMesh = new THREE.Mesh(new THREE.BoxGeometry(0.26, 2.45, 0.22), aluminumMat);
+    engineGroup.add(rodMesh);
+
+    // --- Crankshaft (Kruk As 3D Berputar + Counterweight) ---
+    const crankGroup = new THREE.Group();
+    crankGroup.position.y = -2.25;
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 1.4, 24), darkSteelMat);
+    shaft.rotation.x = Math.PI / 2;
+    crankGroup.add(shaft);
+
+    for (const zOff of [-0.38, 0.38]) {
+      const web = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 0.22, 24, 1, false, 0, Math.PI * 1.2), darkSteelMat);
+      web.rotation.x = Math.PI / 2;
+      web.position.z = zOff;
+      crankGroup.add(web);
+    }
+    const crankPin = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.82, 20), copperMat);
+    crankPin.rotation.x = Math.PI / 2;
+    crankPin.position.y = 0.85;
+    crankGroup.add(crankPin);
+    engineGroup.add(crankGroup);
+
+    // --- Bola Api / Gas Ruang Bakar 3D ---
+    const flameMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      transparent: true,
+      opacity: 0.0,
+    });
+    const flameMesh = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, 1.0, 28), flameMat);
+    engineGroup.add(flameMesh);
+
+    // --- Subtitle Demo 3D ---
+    const SUBS_3D = [
+      { start: 0.2, end: 4.8, text: 'Ini adalah simulasi mesin 4-tak Full 3D memakai Three.js WebGL.' },
+      { start: 5.0, end: 9.8, text: 'Kamera 3D bisa memutar 360 derajat menembus silinder kaca transparan.' },
+      { start: 10.0, end: 14.6, text: 'Semua gerakan piston, klep, dan ledakan sinkron dengan siklus mesin asli!' },
+    ].map((c) => {
+      const words = c.text.split(' ');
+      const step = (c.end - c.start) / words.length;
+      return {
+        start: c.start,
+        end: c.end,
+        words: words.map((w, i) => ({ text: w, start: c.start + i * step, end: c.start + (i + 1) * step })),
+      };
+    });
+
+    // --- State & Controls ---
+    let currentTime = 0;
+    let isPlaying = true;
+    let knockMode = false;
+    let lastTs = null;
+
+    const playBtn = document.getElementById('playBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const modeBtn = document.getElementById('modeBtn');
+    const recordBtn = document.getElementById('recordBtn');
+    const scrubber = document.getElementById('scrubber');
+    const timeLabel = document.getElementById('timeLabel');
+    const strokeLabel = document.getElementById('strokeLabel');
+    const statusBox = document.getElementById('statusBox');
+
+    function renderAt(time) {
+      const crankAngle = (time * 4.6) % (Math.PI * 4);
+      const deg720 = (crankAngle * 180) / Math.PI;
+
+      // Kinematika piston 3D asli
+      const crankR = 0.85;
+      const rodL = 2.45;
+      const crankY = -2.25;
+
+      crankGroup.rotation.z = -crankAngle;
+      const pinX = Math.sin(crankAngle) * crankR;
+      const pinY = crankY + Math.cos(crankAngle) * crankR;
+      const pistonY = pinY + Math.sqrt(Math.max(0.01, rodL * rodL - pinX * pinX));
+
+      pistonGroup.position.y = pistonY;
+
+      // Posisi & sudut connecting rod
+      rodMesh.position.set(pinX / 2, (pinY + pistonY) / 2, 0);
+      rodMesh.rotation.z = Math.atan2(pinX, pistonY - pinY);
+
+      // Klep masuk & buang
+      const inLift = deg720 < 180 ? Math.sin((deg720 / 180) * Math.PI) * 0.35 : 0;
+      const exLift = deg720 >= 540 ? Math.sin(((deg720 - 540) / 180) * Math.PI) * 0.35 : 0;
+      intakeValve.position.y = 2.52 - inLift;
+      exhaustValve.position.y = 2.52 - exLift;
+
+      // Ruang bakar & percikan busi
+      const chamberTop = 2.52;
+      const chamberBot = pistonY + 0.54;
+      const chamberH = Math.max(0.08, chamberTop - chamberBot);
+      flameMesh.scale.set(1, chamberH, 1);
+      flameMesh.position.y = chamberBot + chamberH / 2;
+
+      const firing = deg720 >= 350 && deg720 <= 385;
+      sparkSphere.material.opacity = firing ? 0.95 : 0;
+
+      if (deg720 < 180) {
+        strokeLabel.textContent = '1. HISAP';
+        flameMat.color.setHex(0x38bdf8);
+        flameMat.opacity = 0.25;
+        combustionLight.intensity = 0.4;
+      } else if (deg720 < 360) {
+        strokeLabel.textContent = knockMode && deg720 > 300 ? '⚠ KNOCKING!' : '2. KOMPRESI';
+        flameMat.color.setHex(knockMode && deg720 > 300 ? 0xef4444 : 0xf59e0b);
+        flameMat.opacity = knockMode && deg720 > 300 ? 0.85 : 0.35;
+        combustionLight.color.setHex(knockMode && deg720 > 300 ? 0xef4444 : 0xf59e0b);
+        combustionLight.intensity = knockMode && deg720 > 300 ? 6 : 0.6;
+      } else if (deg720 < 540) {
+        strokeLabel.textContent = knockMode ? '⚠ DETONASI!' : '3. USAHA / LEDAKAN';
+        const k = 1 - (deg720 - 360) / 180;
+        flameMat.color.setHex(knockMode ? 0xff4500 : 0x38bdf8);
+        flameMat.opacity = 0.78 * k;
+        combustionLight.color.setHex(knockMode ? 0xff4500 : 0x38bdf8);
+        combustionLight.intensity = 5.5 * k;
+      } else {
+        strokeLabel.textContent = '4. BUANG';
+        flameMat.color.setHex(0x94a3b8);
+        flameMat.opacity = 0.22;
+        combustionLight.intensity = 0;
+      }
+
+      // Kamera 3D menyapu sinematik di depan parkiran rumah (tidak menembus dinding belakang)
+      const camAngle = Math.sin(time * 0.42) * 0.85;
+      const camRadius = 9.0 - Math.sin(time * 0.5) * 1.2;
+      const shake = knockMode && deg720 > 300 && deg720 < 390 ? Math.sin(time * 90) * 0.14 : 0;
+      camera.position.set(
+        Math.sin(camAngle) * camRadius + shake,
+        1.1 + Math.sin(time * 0.55) * 1.1 + shake,
+        Math.cos(camAngle) * camRadius
+      );
+      camera.lookAt(0, 0.35, 0);
+
+      renderer.render(scene, camera);
+
+      // Gabungkan WebGL 3D + Watermark + Subtitle di Composite Canvas
+      compCtx.clearRect(0, 0, W, H);
+      compCtx.drawImage(glCanvas, 0, 0);
+
+      if (wmImg.complete && wmImg.naturalWidth > 0) {
+        const wmH = 78;
+        const wmW = wmH * (wmImg.naturalWidth / wmImg.naturalHeight);
+        compCtx.save();
+        compCtx.globalAlpha = 0.88;
+        compCtx.drawImage(wmImg, 38, 108, wmW, wmH);
+        compCtx.restore();
+      }
+
+      drawSubtitles(compCtx, SUBS_3D, time, W, H);
+
+      scrubber.value = time;
+      timeLabel.textContent = `${time.toFixed(2)}s / ${DURATION.toFixed(1)}s`;
+    }
+
+    // Ekspos fungsi deterministik agar bisa dipanggil scripts/render3d.js (Playwright)
+    window.__render3DAt = renderAt;
+    window.__duration3D = DURATION;
+
+    function loop(ts) {
+      if (isPlaying) {
+        if (lastTs !== null) {
+          currentTime += (ts - lastTs) / 1000;
+          if (currentTime > DURATION) currentTime = 0;
+        }
+        lastTs = ts;
+        renderAt(currentTime);
+      } else {
+        lastTs = null;
+      }
+      requestAnimationFrame(loop);
+    }
+
+    playBtn.addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      playBtn.textContent = isPlaying ? 'Pause' : 'Play';
+    });
+    restartBtn.addEventListener('click', () => {
+      currentTime = 0;
+      renderAt(0);
+    });
+    modeBtn.addEventListener('click', () => {
+      knockMode = !knockMode;
+      modeBtn.textContent = knockMode ? 'Mode: Knocking ⚠' : 'Mode: Normal';
+    });
+    scrubber.addEventListener('input', (e) => {
+      currentTime = Number(e.target.value);
+      renderAt(currentTime);
+    });
+
+    // Rekam & Download langsung dari browser (WebM/MP4 via MediaRecorder — 0 install!)
+    recordBtn.addEventListener('click', () => {
+      recordBtn.disabled = true;
+      currentTime = 0;
+      isPlaying = true;
+      playBtn.textContent = 'Pause';
+      statusBox.textContent = 'Merekam 15 detik video 3D langsung dari GPU browser...';
+
+      const stream = compCanvas.captureStream(30);
+      const mime = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')
+        ? 'video/mp4;codecs=avc1'
+        : 'video/webm;codecs=vp9';
+      const ext = mime.includes('mp4') ? 'mp4' : 'webm';
+      const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 });
+      const chunks = [];
+
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mesin-3d-threejs.${ext}`;
+        a.click();
+        recordBtn.disabled = false;
+        statusBox.textContent = `Selesai! File mesin-3d-threejs.${ext} sudah terunduh.`;
+      };
+
+      recorder.start();
+      setTimeout(() => recorder.stop(), DURATION * 1000);
+    });
+
+    renderAt(0);
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

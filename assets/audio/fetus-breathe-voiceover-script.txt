@@ -1,0 +1,21 @@
+================================================================
+SCRIPT VOICEOVER — BAGAIMANA JANIN BISA BERNAFAS? (48 DETIK)
+================================================================
+Gaya bicara : Lembut, kagum, hangat, dan penuh rasa ingin tahu
+Sinkron     : src/scenes/fetusBreathe.js & src/scenes/fetusBreatheSubtitles.js
+
+----------------------------------------------------------------
+1. VERSI SIAP PASTE KE ELEVENLABS (Multilingual v2, Speed ~1.02)
+----------------------------------------------------------------
+Janin terendam cairan ketuban selama sembilan bulan — tapi kenapa dia tidak tenggelam? <break time="0.3s" />
+Karena di dalam rahim, paru-paru janin belum dipakai menghirup udara! Oksigennya justru datang dari setiap tarikan napas sang ibu. <break time="0.3s" />
+Oksigen mengalir lewat darah ibu menuju organ ajaib bernama plasenta. <break time="0.2s" />
+Uniknya, darah ibu dan janin tidak pernah bercampur — oksigen dan karbon dioksida hanya bertukar lewat membran tipis! <break time="0.3s" />
+Lalu oksigen mengalir lewat tali pusat layaknya selang kehidupan, langsung menuju jantung janin yang berdetak di dalam rahim. <break time="0.3s" />
+Begitu bayi lahir dan tali pusat dipotong, paru-parunya mengembang untuk pertama kali menghirup udara bebas — itulah alasan munculnya tangisan pertama! <break time="0.3s" />
+Follow untuk fakta menarik lainnya!
+
+----------------------------------------------------------------
+CATATAN:
+Simpan file hasil ElevenLabs ke: assets/audio/voiceover-fetus.mp3
+================================================================

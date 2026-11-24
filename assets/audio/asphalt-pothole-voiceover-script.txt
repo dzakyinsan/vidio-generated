@@ -1,0 +1,24 @@
+================================================================
+SCRIPT VOICEOVER — KENAPA JALAN ASPAL BARU CEPAT BERLUBANG (68 DETIK)
+================================================================
+Gaya bicara : Santai, jelas, sedikit dramatis & mengalir (persis gaya video referensi)
+Sinkron     : src/scenes/asphaltPothole.js & src/scenes/asphaltPotholeSubtitles.js
+
+----------------------------------------------------------------
+1. VERSI SIAP PASTE KE ELEVENLABS (Multilingual v2, Speed ~1.0)
+----------------------------------------------------------------
+Kalau jalan baru selesai diaspal, awalnya memang mulus. <break time="0.3s" />
+Mobil melintas terasa sangat nyaman. Tapi kenapa begitu musim hujan, baru sebentar udah bolong lagi? <break time="0.4s" />
+Masalahnya bukan cuma di permukaan aspal. Begitu muncul retakan rambut kecil, air hujan pelan-pelan menyusup ke dalam. <break time="0.3s" />
+Dia tidak buru-buru... tapi dia sabar. <break time="0.3s" />
+Air meresap ke lapisan batu pondasi, melunakkan tanah di bawahnya, lalu menggerus pasir hingga terbentuk rongga kosong! <break time="0.3s" />
+Lalu truk berat lewat menekan titik lemah itu. Krak! Aspal kehilangan tumpuan, ambles ke bawah, dan langsung jadi lubang penuh genangan air! <break time="0.4s" />
+Solusinya, jangan cuma ditambal tipis di permukaan. Pondasi batu di bawah harus dipadatkan ulang sampai kokoh. <break time="0.3s" />
+Pasang drainase di tepi jalan, plus lapisan tack coat dan aspal kedap air. <break time="0.3s" />
+Air hujan langsung mengalir lancar ke saluran — pondasi tetap kering, dan jalan jauh lebih awet meski hujan deras dan truk berat terus lewat! <break time="0.3s" />
+Follow untuk fakta teknik menarik lainnya!
+
+----------------------------------------------------------------
+CATATAN:
+Simpan file hasil ElevenLabs ke: assets/audio/voiceover-asphalt-pothole.mp3
+================================================================

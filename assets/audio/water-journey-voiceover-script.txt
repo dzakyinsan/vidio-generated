@@ -1,0 +1,22 @@
+================================================================
+SCRIPT VOICEOVER — AIR PDAM VS AIR TANAH: BAGAIMANA SAMPAI KE RUMAH? (55 DETIK)
+================================================================
+Gaya bicara : Antusias, mengalir seperti film dokumenter pendek
+Sinkron     : src/scenes/waterJourney.js & src/scenes/waterJourneySubtitles.js
+
+----------------------------------------------------------------
+1. VERSI SIAP PASTE KE ELEVENLABS (Multilingual v2, Speed ~1.04)
+----------------------------------------------------------------
+Tahukah kamu? Air keran di rumah kita biasanya datang dari dua jalur rahasia: PDAM atau air tanah! <break time="0.3s" />
+Pertama, jalur PDAM: air diambil dari sungai keruh, lalu disaring dari sampah dan disedot pompa intake. <break time="0.3s" />
+Di instalasi pengolahan, lumpur digumpalkan koagulan lalu diendapkan, dan disaring berlapis pasir silika serta karbon aktif hingga bening. <break time="0.3s" />
+Kuman dibasmi klorin — makanya kadang tercium bau kaporit — lalu gravitasi menara air mendorongnya lewat pipa bawah tanah ke rumahmu! <break time="0.3s" />
+Kedua, air tanah: air hujan meresap dan tersaring alami oleh lapisan pasir dan batu hingga terkumpul di akuifer bawah rumah. <break time="0.3s" />
+Pompa sumur menyedotnya naik ke toren atas, lalu mengalir turun ke keran — tapi hati-hati jarak dengan septic tank! <break time="0.3s" />
+Mau PDAM yang lewat pipa tua, atau air sumur yang kaya mineral, keduanya tetap wajib dimasak atau difilter dulu sebelum diminum ya! <break time="0.3s" />
+Follow untuk fakta menarik lainnya!
+
+----------------------------------------------------------------
+CATATAN:
+Simpan file hasil ElevenLabs ke: assets/audio/voiceover-water.mp3
+================================================================

@@ -8,6 +8,10 @@
     "generate:sfx": "node scripts/generateSfx.js",
     "generate:sfx:charge": "node scripts/generateChargeSfx.js",
     "generate:sfx:dinner": "node scripts/generateLateDinnerSfx.js",
+    "generate:sfx:engine": "node scripts/generateEngineSfx.js",
+    "generate:sfx:warmup": "node scripts/generateWarmupSfx.js",
+    "generate:sfx:water": "node scripts/generateWaterSfx.js",
+    "generate:sfx:womb": "node scripts/generateWombSfx.js",
     "render": "node scripts/render.js",
     "render:draft": "node scripts/render.js --scale 0.5 --fps 30"
   },

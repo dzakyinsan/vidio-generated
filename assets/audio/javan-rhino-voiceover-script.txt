@@ -1,0 +1,22 @@
+================================================================
+SCRIPT VOICEOVER — POLEMIK PEMINDAHAN BADAK JAWA UJUNG KULON (7 ADEGAN)
+================================================================
+Gaya bicara : Mengalir, jelas, informatif & berimbang (cocok untuk 7 adegan)
+Sinkron     : src/scenes/javanRhino.js & src/scenes/javanRhinoSubtitles.js
+
+----------------------------------------------------------------
+1. VERSI SIAP PASTE KE ELEVENLABS (Multilingual v2, Speed ~1.03)
+----------------------------------------------------------------
+Wacana pemindahan Badak Jawa dari Ujung Kulon mendadak viral dan memicu pro-kontra di media sosial. <break time="0.3s" />
+Saat ini, seluruh populasi Badak Jawa di dunia hanya tersisa puluhan ekor — dan semuanya hidup di satu tempat saja, yaitu Taman Nasional Ujung Kulon. <break time="0.3s" />
+Pemerintah mengusulkan memindahkan sebagian badak sejauh hampir seribu kilometer ke Taman Nasional Alas Purwo di Jawa Timur sebagai habitat kedua. <break time="0.3s" />
+Alasannya mitigasi bencana, karena Ujung Kulon sangat dekat dengan Gunung Anak Krakatau. Jika letusan besar atau tsunami terjadi, seluruh populasi di satu titik terancam punah sekaligus. <break time="0.3s" />
+Namun, rencana ini langsung menuai penolakan dari aktivis lingkungan, pakar ekologi, dan warga lokal. Pakar mengingatkan bahwa Badak Jawa sangat sensitif — proses penangkapan dan perjalanan panjang punya risiko stres berat hingga kematian. <break time="0.3s" />
+Selain itu, wacana ini muncul berdekatan dengan terbitnya peta wilayah pertambangan di Banten. Hal ini membuat organisasi lingkungan seperti WALHI dan publik curiga ada kepentingan tambang di balik relokasi. <break time="0.3s" />
+Menanggapi hal itu, Kementerian ESDM dan Kementerian Kehutanan membantah keras, serta menegaskan bahwa Ujung Kulon bukan wilayah tambang dan tidak ada izin tambang di dalamnya. Pemerintah juga menyebut pemindahan tidak akan dilakukan tanpa kajian ilmiah yang matang. <break time="0.3s" />
+Menurutmu, mana yang lebih tepat: memperkuat perlindungan di Ujung Kulon, atau tetap membuka habitat kedua? Tulis pendapatmu di komentar dan follow!
+
+----------------------------------------------------------------
+CATATAN:
+Simpan file hasil ElevenLabs ke: assets/audio/voiceover-javan-rhino.mp3
+================================================================

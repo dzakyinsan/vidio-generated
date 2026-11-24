@@ -1,0 +1,24 @@
+================================================================
+SCRIPT VOICEOVER — KENAPA CAT TEMBOK MENGGELEMBUNG & MENGELUPAS (68 DETIK)
+================================================================
+Gaya bicara : Santai, tenang, sedikit dramatis & mengalir (persis gaya video referensi)
+Sinkron     : src/scenes/wallPeeling.js & src/scenes/wallPeelingSubtitles.js
+
+----------------------------------------------------------------
+1. VERSI SIAP PASTE KE ELEVENLABS (Multilingual v2, Speed ~1.0)
+----------------------------------------------------------------
+Kalau kamu cat tembok rumah, awalnya memang aman. <break time="0.3s" />
+Tembok kelihatan rapi dan mulus. Tapi beberapa bulan kemudian, kenapa tiba-tiba ngelupas? <break time="0.4s" />
+Karena batu bata itu berpori. Di bawah pondasi, ada air tanah yang lembap. <break time="0.3s" />
+Air pelan-pelan merambat naik lewat pori-pori tembok. Dia tidak buru-buru... tapi dia sabar. <break time="0.3s" />
+Sambil membawa garam alkali dari dalam semen. <break time="0.3s" />
+Air dan garam itu terus mendorong lapisan cat dari belakang. Cat mulai menggelembung... lalu retak, dan akhirnya mengelupas! <break time="0.4s" />
+Solusinya, jangan langsung ditimpa cat baru. Kerok dulu cat lama sampai bersih ke lapisan plester. <break time="0.3s" />
+Lalu lapisi dengan waterproofing kedap air dan primer alkali sealer. Lapisan ini memblokir air tanah langsung dari dalam! <break time="0.3s" />
+Baru setelah itu dicat ulang — tembok tetap kering, mulus, dan awet bertahun-tahun. <break time="0.3s" />
+Follow untuk fakta bangunan menarik lainnya!
+
+----------------------------------------------------------------
+CATATAN:
+Simpan file hasil ElevenLabs ke: assets/audio/voiceover-wall-peeling.mp3
+================================================================

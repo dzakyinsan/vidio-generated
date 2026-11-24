@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Cutaway: Jalan Aspal Cepat Berlubang (Three.js WebGL)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #0b0f17;
+      color: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      padding: 20px;
+    }
+    .stage {
+      position: relative;
+      height: 90vh;
+      aspect-ratio: 9 / 16;
+      background: #000;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+      border: 1px solid #2b3040;
+    }
+    #compositeCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .panel {
+      width: 360px;
+      background: #161b26;
+      border: 1px solid #2b3040;
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+    h1 { font-size: 18px; font-weight: 800; line-height: 1.3; }
+    .badge {
+      display: inline-block;
+      background: #0d9488;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 99px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .meta { font-size: 13px; color: #94a3b8; line-height: 1.45; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; }
+    button, a.btn {
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      text-decoration: none;
+      text-align: center;
+    }
+    button:hover, a.btn:hover { background: #2563eb; }
+    button.secondary, a.btn.secondary { background: #2b3245; color: #e2e8f0; }
+    button.secondary:hover, a.btn.secondary:hover { background: #374151; }
+    button.export { background: #16a34a; flex: 1; }
+    button.export:hover { background: #15803d; }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    .markers { display: flex; flex-direction: column; gap: 6px; }
+    .markers button { text-align: left; background: #232836; font-weight: 500; padding: 7px 11px; }
+    .markers button:hover { background: #2f374a; }
+    input[type="range"] { width: 100%; accent-color: #0d9488; }
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+    .status-box {
+      background: #0f141e;
+      border: 1px solid #262c3c;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #93c5fd;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.170.0/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="stage">
+    <canvas id="compositeCanvas" width="1080" height="1920"></canvas>
+  </div>
+
+  <div class="panel">
+    <div>
+      <h1>Jalan Aspal Berlubang <span class="badge">REAL 3D</span></h1>
+      <p class="meta">Diorama 3D Cutaway penuh ujung-ke-ujung dengan pencahayaan, bayangan lembut, hujan 3D, truk 3D, karakter 3D, subtitle & watermark.</p>
+    </div>
+
+    <div class="controls">
+      <button id="playBtn">Pause</button>
+      <button id="restartBtn" class="secondary">Restart</button>
+    </div>
+
+    <div>
+      <input id="scrubber" type="range" min="0" max="61" step="0.01" value="0" />
+      <div class="time-row">
+        <span id="timeLabel">0.00s / 61.0s</span>
+        <span id="actLabel">Babak 1: Jalan Mulus</span>
+      </div>
+    </div>
+
+    <div class="markers">
+      <button data-t="0">1. Kondisi Awal — Jalan Baru Mulus (0s)</button>
+      <button data-t="10.3">2. Macro 3D — Retakan & Air Meresap (10.3s)</button>
+      <button data-t="29.0">3. Dampak — Truk Lewat & KRAK! (29s)</button>
+      <button data-t="38.0">4. Solusi — Padat, Drainase & Sealcoat (38s)</button>
+    </div>
+
+    <div class="controls">
+      <button id="recordBtn" class="export">Rekam & Download Video 3D (61s)</button>
+    </div>
+    <div class="status-box" id="statusBox">
+      Siap! Jalan 3D penuh ujung-ke-ujung dengan kamera cutaway 1-shot.
+    </div>
+
+    <a href="/" class="btn secondary">← Kembali ke Studio 2D</a>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { drawSubtitles } from '/src/engine/subtitle.js';
+    import { ASPHALT_POTHOLE_SUBTITLES } from '/src/scenes/asphaltPotholeSubtitles.js';
+    import { clamp, easeInOutCubic, easeOutBack, easeOutCubic, lerp, progress } from '/src/engine/math.js';
+
+    const W = 1080;
+    const H = 1920;
+    const DURATION = 61;
+
+    // Audio voiceover sinkron untuk halaman 3D!
+    const voAudio = new Audio('/assets/audio/voiceover-asphalt-pothole.mp3');
+    voAudio.preload = 'auto';
+
+    // 1. WebGLRenderer 3D Asli (Three.js)
+    const glCanvas = document.createElement('canvas');
+    glCanvas.width = W;
+    glCanvas.height = H;
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: glCanvas,
+      antialias: true,
+      preserveDrawingBuffer: true,
+    });
+    renderer.setSize(W, H, false);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.18;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    // 2. Composite 2D Canvas (gabungkan 3D + Watermark + Subtitle + CTA)
+    const compCanvas = document.getElementById('compositeCanvas');
+    const compCtx = compCanvas.getContext('2d');
+
+    const wmImg = new Image();
+    wmImg.src = '/assets/images/watermark-dark.png';
+
+    // 3. Scene, Langit Cerah Stylized, Fog, & Kamera Perspektif 3D
+    const scene = new THREE.Scene();
+    const skyDay = new THREE.Color(0x7cc5f8);
+    const skyRain = new THREE.Color(0x5b7088);
+    scene.background = skyDay.clone();
+    scene.fog = new THREE.FogExp2(0xb8e1fa, 0.014);
+
+    const camera = new THREE.PerspectiveCamera(36, W / H, 0.1, 140);
+
+    // 4. Pencahayaan 3D Studio Daylight + Soft Shadow
+    const hemiLight = new THREE.HemisphereLight(0xe0f2fe, 0x4ade80, 1.1);
+    scene.add(hemiLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfff7dc, 2.2);
+    sunLight.position.set(10, 16, 12);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(2048, 2048);
+    sunLight.shadow.camera.near = 2;
+    sunLight.shadow.camera.far = 55;
+    sunLight.shadow.camera.left = -16;
+    sunLight.shadow.camera.right = 16;
+    sunLight.shadow.camera.top = 14;
+    sunLight.shadow.camera.bottom = -10;
+    sunLight.shadow.bias = -0.0006;
+    scene.add(sunLight);
+
+    const fillLight = new THREE.DirectionalLight(0x93c5fd, 0.65);
+    fillLight.position.set(-10, 6, 8);
+    scene.add(fillLight);
+
+    // =========================================================================
+    // 5. LATAR 3D STYLIZED (Padang Rumput Luas, Semak 3D, Pohon Kelapa 3D, Awan 3D)
+    // =========================================================================
+    const meadowMat = new THREE.MeshStandardMaterial({ color: 0x62be58, roughness: 0.92 });
+    const meadow = new THREE.Mesh(new THREE.BoxGeometry(90, 1.5, 50), meadowMat);
+    meadow.position.set(0, -0.78, -27.5);
+    meadow.receiveShadow = true;
+    scene.add(meadow);
+
+    // Semak 3D lembut di kejauhan
+    const bushMat = new THREE.MeshStandardMaterial({ color: 0x3f9b3a, roughness: 0.85 });
+    const bushCoords = [
+      [-9, 0.5, -10, 1.2], [-7.5, 0.35, -9.5, 0.85], [-3.2, 0.5, -13, 1.3],
+      [4.5, 0.55, -11, 1.4], [6.2, 0.4, -10.5, 0.95], [10.5, 0.5, -12, 1.25],
+    ];
+    for (const [bx, by, bz, br] of bushCoords) {
+      const b = new THREE.Mesh(new THREE.SphereGeometry(br, 20, 16), bushMat);
+      b.position.set(bx, by, bz);
+      b.scale.set(1.25, 0.85, 1.0);
+      scene.add(b);
+    }
+
+    // Pohon Kelapa 3D melengkung di belakang jalan (ikonik seperti video referensi!)
+    const palmGroup = new THREE.Group();
+    palmGroup.position.set(-3.2, 0, -7.2);
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8d6239, roughness: 0.9 });
+    for (let i = 0; i < 8; i++) {
+      const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.22 - i * 0.015, 0.25 - i * 0.015, 0.9, 10), trunkMat);
+      seg.position.set(i * 0.14, 0.45 + i * 0.78, 0);
+      seg.rotation.z = -0.14;
+      seg.castShadow = true;
+      palmGroup.add(seg);
+    }
+    const palmCrown = new THREE.Group();
+    palmCrown.position.set(1.1, 6.45, 0);
+    const frondMat = new THREE.MeshStandardMaterial({ color: 0x2e9b3f, roughness: 0.75, side: THREE.DoubleSide });
+    for (let f = 0; f < 7; f++) {
+      const ang = (f / 7) * Math.PI * 2;
+      const frondPivot = new THREE.Group();
+      frondPivot.rotation.y = ang;
+      const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.55, 2.9, 5), frondMat);
+      leaf.scale.set(1, 1, 0.18);
+      leaf.rotation.z = -Math.PI * 0.62;
+      leaf.position.set(1.3, -0.35, 0);
+      frondPivot.add(leaf);
+      palmCrown.add(frondPivot);
+    }
+    palmGroup.add(palmCrown);
+    scene.add(palmGroup);
+
+    // Awan 3D lembut melayang
+    const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95 });
+    const clouds = [];
+    for (const [cx, cy, cz, sc] of [[-5.5, 7.2, -14, 1.1], [4.8, 7.8, -16, 1.3], [0.2, 8.6, -20, 1.0]]) {
+      const cg = new THREE.Group();
+      for (const [ox, oy, or] of [[-0.9, 0, 0.75], [0, 0.35, 1.0], [0.95, 0.05, 0.78]]) {
+        const puff = new THREE.Mesh(new THREE.SphereGeometry(or, 14, 12), cloudMat);
+        puff.position.set(ox, oy, 0);
+        cg.add(puff);
+      }
+      cg.position.set(cx, cy, cz);
+      cg.scale.setScalar(sc);
+      scene.add(cg);
+      clouds.push({ group: cg, baseX: cx });
+    }
+
+    // =========================================================================
+    // 6. POTONGAN MELINTANG JALAN 3D PENUH UJUNG-KE-UJUNG (Width = 48 unit!)
+    //    - Aspal (y = -0.6 .. 0.0)
+    //    - Batu Pondasi / Agregat (y = -2.0 .. -0.6)
+    //    - Tanah Dasar (y = -5.5 .. -2.0)
+    // =========================================================================
+    const ROAD_LEN = 48; // Penuh dari kiri ke kanan tanpa pernah terputus!
+    const ROAD_DEPTH = 5.4;
+
+    // Lapisan 3: Tanah Dasar (Subgrade Soil)
+    const soilMat = new THREE.MeshStandardMaterial({ color: 0x6f4928, roughness: 0.95 });
+    const soilMesh = new THREE.Mesh(new THREE.BoxGeometry(ROAD_LEN, 3.6, ROAD_DEPTH), soilMat);
+    soilMesh.position.set(0, -3.8, 0);
+    soilMesh.receiveShadow = true;
+    scene.add(soilMesh);
+
+    // Zona tanah berlumpur basah di tengah potongan melintang (muncul saat hujan meresap!)
+    const mudMat = new THREE.MeshStandardMaterial({
+      color: 0x1e3a5f,
+      roughness: 0.35,
+      transparent: true,
+      opacity: 0,
+    });
+    const mudBlob = new THREE.Mesh(new THREE.SphereGeometry(1.65, 24, 18), mudMat);
+    mudBlob.position.set(0, -2.35, 1.9);
+    mudBlob.scale.set(1.4, 0.72, 0.6);
+    scene.add(mudBlob);
+
+    // Lapisan 2: Batu Pondasi / Agregat (Base Course)
+    const gravelBaseMat = new THREE.MeshStandardMaterial({ color: 0x78716c, roughness: 0.92 });
+    const gravelBase = new THREE.Mesh(new THREE.BoxGeometry(ROAD_LEN, 1.4, ROAD_DEPTH - 0.04), gravelBaseMat);
+    gravelBase.position.set(0, -1.3, -0.02);
+    gravelBase.receiveShadow = true;
+    scene.add(gravelBase);
+
+    // 45 Batu kerikil 3D asli di permukaan cutaway depan agar tampak bertekstur 3D!
+    const stoneMats = [
+      new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.85 }),
+      new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.9 }),
+      new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.8 }),
+    ];
+    const gravelStones = [];
+    for (let i = 0; i < 45; i++) {
+      const sx = -11 + (i % 15) * 1.55 + ((i * 7) % 5) * 0.1;
+      const sy = -0.82 - Math.floor(i / 15) * 0.42 + ((i * 3) % 3) * 0.05;
+      const stone = new THREE.Mesh(new THREE.DodecahedronGeometry(0.22 + (i % 3) * 0.06, 0), stoneMats[i % 3]);
+      stone.position.set(sx, sy, ROAD_DEPTH / 2 - 0.05);
+      stone.scale.set(1.3, 0.85, 0.65);
+      stone.rotation.set(i, i * 0.7, 0);
+      scene.add(stone);
+      gravelStones.push({ mesh: stone, baseY: sy, inPit: Math.abs(sx) < 1.35 });
+    }
+
+    // Rongga kosong (void) gelap di bawah aspal saat pasir tergerus air!
+    const voidMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 1.0, transparent: true, opacity: 0 });
+    const voidMesh = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.68, 1.6), voidMat);
+    voidMesh.position.set(0, -0.96, ROAD_DEPTH / 2 - 0.6);
+    scene.add(voidMesh);
+
+    // Lapisan 1: Aspal 3D Halus & Mulus (MeshPhysicalMaterial dengan efek basah halus saat hujan!)
+    const asphaltMat = new THREE.MeshPhysicalMaterial({
+      color: 0x2a3444,
+      roughness: 0.42,
+      metalness: 0.04,
+      clearcoat: 0.16,
+      clearcoatRoughness: 0.35,
+    });
+    const leftAsphalt = new THREE.Mesh(new THREE.BoxGeometry(22.7, 0.6, ROAD_DEPTH), asphaltMat);
+    leftAsphalt.position.set(-12.65, -0.3, 0);
+    leftAsphalt.receiveShadow = true;
+    scene.add(leftAsphalt);
+
+    const rightAsphalt = new THREE.Mesh(new THREE.BoxGeometry(22.7, 0.6, ROAD_DEPTH), asphaltMat);
+    rightAsphalt.position.set(12.65, -0.3, 0);
+    rightAsphalt.receiveShadow = true;
+    scene.add(rightAsphalt);
+
+    // Trotoar / Bahu Jalan Halus di sisi belakang jalan agar tepi aspal rapi
+    const curbMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.55 });
+    const backCurb = new THREE.Mesh(new THREE.BoxGeometry(ROAD_LEN, 0.22, 0.36), curbMat);
+    backCurb.position.set(0, 0.06, -ROAD_DEPTH / 2 + 0.18);
+    backCurb.receiveShadow = true;
+    scene.add(backCurb);
+
+    // Pecahan aspal tengah bergerigi seperti retakan alami (6 fragmen miring organik, bukan balok kaku)
+    const centerChunks = [];
+    const shardSpecs = [
+      { x: -1.05, w: 0.68, tilt: -0.22, drop: 0.18, rotY: 0.06 },
+      { x: -0.52, w: 0.58, tilt: -0.34, drop: 0.38, rotY: -0.08 },
+      { x: -0.05, w: 0.52, tilt: -0.14, drop: 0.48, rotY: 0.05 },
+      { x: 0.44, w: 0.56, tilt: 0.32, drop: 0.40, rotY: -0.06 },
+      { x: 0.96, w: 0.66, tilt: 0.20, drop: 0.16, rotY: 0.07 },
+    ];
+    for (const sp of shardSpecs) {
+      const chunk = new THREE.Mesh(new THREE.BoxGeometry(sp.w, 0.58, ROAD_DEPTH - 0.02), asphaltMat);
+      chunk.position.set(sp.x, -0.3, 0);
+      chunk.receiveShadow = true;
+      chunk.castShadow = true;
+      scene.add(chunk);
+      centerChunks.push({ mesh: chunk, baseX: sp.x, tilt: sp.tilt, drop: sp.drop, rotY: sp.rotY });
+    }
+
+    // Marka jalan kuning 3D halus penuh ujung-ke-ujung
+    const lineMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 });
+    for (let lx = -20; lx <= 20; lx += 2.6) {
+      if (Math.abs(lx) < 1.5) continue;
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.022, 0.22), lineMat);
+      stripe.position.set(lx, 0.012, 0);
+      scene.add(stripe);
+    }
+
+    // Retakan zig-zag bercabang 3D (di penampang depan & menyebar di permukaan lubang!)
+    const crackMat = new THREE.MeshBasicMaterial({ color: 0x020617 });
+    const crackGroup = new THREE.Group();
+    const zigSegs = [
+      [0.0, -0.06, 0.032, 0.16, 0.25],
+      [-0.035, -0.19, 0.030, 0.17, -0.32],
+      [0.025, -0.33, 0.028, 0.18, 0.28],
+      [-0.02, -0.47, 0.026, 0.17, -0.22],
+      [0.09, -0.28, 0.018, 0.18, -0.85], // cabang retak kanan
+      [-0.10, -0.40, 0.018, 0.16, 0.78], // cabang retak kiri
+    ];
+    for (const [cx, cy, cw, ch, cr] of zigSegs) {
+      const seg = new THREE.Mesh(new THREE.BoxGeometry(cw, ch, 0.05), crackMat);
+      seg.position.set(cx, cy, ROAD_DEPTH / 2 + 0.015);
+      seg.rotation.z = cr;
+      crackGroup.add(seg);
+    }
+    crackGroup.scale.set(1, 0.001, 1);
+    scene.add(crackGroup);
+
+    // Jaringan retakan permukaan yang melebar saat truk menekan lubang!
+    const surfaceCrackGroup = new THREE.Group();
+    const surfCracks = [
+      [-1.15, 0.014, 0.3, 0.95, 0.045, 0.35],
+      [-0.85, 0.014, -0.4, 1.1, 0.05, -0.25],
+      [0.95, 0.014, 0.2, 1.0, 0.045, -0.4],
+      [0.75, 0.014, -0.5, 0.9, 0.04, 0.3],
+      [0.0, 0.014, 0.85, 1.6, 0.055, 0.12],
+      [0.05, 0.014, -0.8, 1.5, 0.05, -0.15],
+    ];
+    for (const [sx, sy, sz, sw, sd, srot] of surfCracks) {
+      const sc = new THREE.Mesh(new THREE.BoxGeometry(sw, 0.02, sd), crackMat);
+      sc.position.set(sx, sy, sz);
+      sc.rotation.y = srot;
+      surfaceCrackGroup.add(sc);
+    }
+    surfaceCrackGroup.visible = false;
+    scene.add(surfaceCrackGroup);
+
+    // Genangan air biru mengilap organik di dalam retakan lubang jalan!
+    const puddleMat = new THREE.MeshPhysicalMaterial({
+      color: 0x38bdf8,
+      roughness: 0.06,
+      metalness: 0.08,
+      clearcoat: 1.0,
+      transparent: true,
+      opacity: 0,
+    });
+    const puddleMesh = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 0.85, 0.18, 28), puddleMat);
+    puddleMesh.position.set(0, -0.34, 0.15);
+    puddleMesh.scale.set(1.15, 1, 1.45);
+    scene.add(puddleMesh);
+
+    // Tetesan air 3D KECIL & HALUS (radius 0.042, bentuk tetesan) merembes lewat retakan!
+    const dropMat = new THREE.MeshPhysicalMaterial({
+      color: 0x38bdf8,
+      roughness: 0.04,
+      clearcoat: 1.0,
+      transmission: 0.3,
+    });
+    const seepDrops = [];
+    for (let d = 0; d < 12; d++) {
+      const drop = new THREE.Mesh(new THREE.SphereGeometry(0.042, 14, 12), dropMat);
+      drop.scale.set(0.85, 1.35, 0.85);
+      drop.visible = false;
+      scene.add(drop);
+      seepDrops.push(drop);
+    }
+
+    // SOLUSI BABAK 4: Lapisan Tack Coat Emas + Sealcoat Kedap Air + Saluran Drainase 3D di sisi depan/belakang!
+    const tackCoat = new THREE.Mesh(
+      new THREE.BoxGeometry(ROAD_LEN, 0.08, ROAD_DEPTH + 0.04),
+      new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4 }),
+    );
+    tackCoat.position.set(0, -0.62, 0);
+    tackCoat.scale.x = 0.001;
+    scene.add(tackCoat);
+
+    const sealCoat = new THREE.Mesh(
+      new THREE.BoxGeometry(ROAD_LEN, 0.06, ROAD_DEPTH + 0.04),
+      new THREE.MeshStandardMaterial({ color: 0x0d9488, roughness: 0.25, metalness: 0.15 }),
+    );
+    sealCoat.position.set(0, 0.03, 0);
+    sealCoat.scale.x = 0.001;
+    scene.add(sealCoat);
+
+    // Saluran Drainase Beton 3D di tepi jalan belakang (x = -20..+20, z = -3.2)
+    const drainGroup = new THREE.Group();
+    const concreteMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.85 });
+    const drainFloor = new THREE.Mesh(new THREE.BoxGeometry(ROAD_LEN, 0.22, 1.1), concreteMat);
+    drainFloor.position.set(0, -0.75, -3.2);
+    const drainWallB = new THREE.Mesh(new THREE.BoxGeometry(ROAD_LEN, 0.85, 0.18), concreteMat);
+    drainWallB.position.set(0, -0.35, -3.7);
+    const drainWater = new THREE.Mesh(
+      new THREE.BoxGeometry(ROAD_LEN, 0.28, 0.85),
+      new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.15, transparent: true, opacity: 0.85 }),
+    );
+    drainWater.position.set(0, -0.52, -3.2);
+    drainGroup.add(drainFloor, drainWallB, drainWater);
+    drainGroup.position.y = -2.0; // naik mulus di Babak 4!
+    scene.add(drainGroup);
+
+    // =========================================================================
+    // 7. KARAKTER 3D IMUT HELM PROYEK KUNING (Gaya Clay-Toy Persis Referensi!)
+    // =========================================================================
+    const worker = new THREE.Group();
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xf4c298, roughness: 0.65 });
+    const blackMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7 });
+    const vestMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.6 });
+    const jeansMat = new THREE.MeshStandardMaterial({ color: 0x1e3a5f, roughness: 0.8 });
+    const shoeMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5 });
+    const helmMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.25, metalness: 0.1 });
+
+    // Kaki & Sepatu
+    for (const sx of [-0.18, 0.18]) {
+      const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.11, 0.48, 8, 12), jeansMat);
+      leg.position.set(sx, 0.42, 0);
+      leg.castShadow = true;
+      worker.add(leg);
+      const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.15, 0.36), shoeMat);
+      shoe.position.set(sx, 0.08, 0.06);
+      shoe.castShadow = true;
+      worker.add(shoe);
+    }
+    // Badan + Rompi Proyek
+    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.32, 0.42, 10, 16), blackMat);
+    torso.position.set(0, 1.08, 0);
+    torso.castShadow = true;
+    worker.add(torso);
+    const vest = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.56, 16), vestMat);
+    vest.position.set(0, 1.08, 0);
+    worker.add(vest);
+    // Kepala bulat 3D + Mata titik + Helm Proyek Kuning
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.36, 24, 20), skinMat);
+    head.position.set(0, 1.76, 0);
+    head.castShadow = true;
+    worker.add(head);
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+    for (const ex of [-0.12, 0.12]) {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.036, 10, 10), eyeMat);
+      eye.position.set(ex, 1.78, 0.33);
+      worker.add(eye);
+    }
+    const helmetDome = new THREE.Mesh(
+      new THREE.SphereGeometry(0.39, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.55),
+      helmMat,
+    );
+    helmetDome.position.set(0, 1.84, 0);
+    helmetDome.castShadow = true;
+    worker.add(helmetDome);
+    const helmetBrim = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.06, 24), helmMat);
+    helmetBrim.position.set(0, 1.84, 0.03);
+    worker.add(helmetBrim);
+
+    // Mesin Pemadat 3D (Stamper merah) di depan pekerja saat Babak 4!
+    const stamper = new THREE.Group();
+    const stBody = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.65, 0.32), new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.4 }));
+    stBody.position.set(0, 0.55, 0);
+    const stFoot = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.18, 0.46), new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.6 }));
+    stFoot.position.set(0, 0.12, 0);
+    stamper.add(stBody, stFoot);
+    stamper.position.set(-0.68, 0, 0.15);
+    stamper.visible = false;
+    worker.add(stamper);
+
+    worker.position.set(2.85, 0, -1.65);
+    worker.rotation.y = -0.35;
+    scene.add(worker);
+
+    // =========================================================================
+    // 8. KENDARAAN 3D: MOBIL MERAH (Babak 1) & TRUK BERAT BIRU (Babak 3 & 4B)
+    // =========================================================================
+    function createWheel() {
+      const wg = new THREE.Group();
+      const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.28, 20), new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 }));
+      tire.rotation.x = Math.PI / 2;
+      const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.3, 14), new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.6, roughness: 0.3 }));
+      rim.rotation.x = Math.PI / 2;
+      wg.add(tire, rim);
+      wg.castShadow = true;
+      return wg;
+    }
+
+    // Mobil Sedan Merah 3D
+    const redCar = new THREE.Group();
+    const carBody = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.65, 1.35), new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3, metalness: 0.2 }));
+    carBody.position.set(0, 0.62, 0);
+    carBody.castShadow = true;
+    const carCabin = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.52, 1.2), new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.3 }));
+    carCabin.position.set(-0.1, 1.15, 0);
+    carCabin.castShadow = true;
+    const carGlass = new THREE.Mesh(new THREE.BoxGeometry(1.44, 0.36, 1.12), new THREE.MeshStandardMaterial({ color: 0xbae6fd, roughness: 0.1, metalness: 0.3 }));
+    carGlass.position.set(-0.1, 1.14, 0);
+    redCar.add(carBody, carCabin, carGlass);
+    for (const [wx, wz] of [[-0.8, 0.65], [0.8, 0.65], [-0.8, -0.65], [0.8, -0.65]]) {
+      const w = createWheel();
+      w.position.set(wx, 0.34, wz);
+      redCar.add(w);
+    }
+    redCar.position.set(-16, 0, 0.2);
+    scene.add(redCar);
+
+    // Truk Berat 3D (Kontainer Biru + Kabin Kuning)
+    const heavyTruck = new THREE.Group();
+    const cargo = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1.75, 1.75), new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.45 }));
+    cargo.position.set(-0.7, 1.35, 0);
+    cargo.castShadow = true;
+    const cab = new THREE.Mesh(new THREE.BoxGeometry(1.35, 1.25, 1.65), new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.35 }));
+    cab.position.set(1.75, 1.08, 0);
+    cab.castShadow = true;
+    const cabGlass = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.55, 1.68), new THREE.MeshStandardMaterial({ color: 0xbae6fd, roughness: 0.15 }));
+    cabGlass.position.set(2.12, 1.26, 0);
+    heavyTruck.add(cargo, cab, cabGlass);
+    for (const [wx, wz] of [[-1.7, 0.85], [-0.4, 0.85], [1.75, 0.85], [-1.7, -0.85], [-0.4, -0.85], [1.75, -0.85]]) {
+      const w = createWheel();
+      w.scale.setScalar(1.22);
+      w.position.set(wx, 0.42, wz);
+      heavyTruck.add(w);
+    }
+    heavyTruck.position.set(-20, 0, 0.35);
+    scene.add(heavyTruck);
+
+    // =========================================================================
+    // 9. HUJAN 3D (Partikel Rintik Hujan)
+    // =========================================================================
+    const rainCount = 260;
+    const rainGeo = new THREE.BufferGeometry();
+    const rainPos = new Float32Array(rainCount * 3);
+    for (let i = 0; i < rainCount; i++) {
+      rainPos[i * 3] = (Math.random() - 0.5) * 20;
+      rainPos[i * 3 + 1] = Math.random() * 11;
+      rainPos[i * 3 + 2] = (Math.random() - 0.5) * 10;
+    }
+    rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
+    const rainMat = new THREE.PointsMaterial({ color: 0xbae6fd, size: 0.075, transparent: true, opacity: 0 });
+    const rainPoints = new THREE.Points(rainGeo, rainMat);
+    scene.add(rainPoints);
+
+    // =========================================================================
+    // 10. UPDATE & RENDER FRAME 3D + SUBTITLE + WATERMARK
+    // =========================================================================
+    function updateScene3D(time) {
+      // Intensitas hujan (Babak 2-3 & uji Babak 4B — sinkron 61 detik!)
+      const rainA = clamp(
+        progress(time, 10.5, 12.2) * (1 - progress(time, 38.0, 39.6)) + progress(time, 49.5, 51.0),
+        0,
+        1,
+      );
+      scene.background.copy(skyDay).lerp(skyRain, rainA * 0.72);
+      scene.fog.color.copy(scene.background);
+      sunLight.intensity = lerp(2.2, 1.35, rainA);
+      rainMat.opacity = rainA * 0.85;
+      if (rainA > 0.02) {
+        const arr = rainGeo.attributes.position.array;
+        for (let i = 0; i < rainCount; i++) {
+          arr[i * 3 + 1] = ((11 - (time * 13 + i * 0.43) % 11) + 11) % 11;
+        }
+        rainGeo.attributes.position.needsUpdate = true;
+      }
+
+      // Goyang pohon kelapa & awan
+      palmCrown.rotation.z = Math.sin(time * (1.2 + rainA * 2)) * (0.05 + rainA * 0.06);
+      for (const c of clouds) {
+        c.group.position.x = c.baseX + Math.sin(time * 0.25 + c.baseX) * 0.9;
+      }
+
+      // Fase kerusakan & solusi (sinkron presisi 61 detik!)
+      const crackP = progress(time, 12.8, 16.0, easeOutCubic) * (1 - progress(time, 45.0, 47.0, easeInOutCubic));
+      const seepP = progress(time, 15.0, 27.5, easeInOutCubic) * (1 - progress(time, 41.0, 44.0, easeInOutCubic));
+      const potholeP = progress(time, 31.8, 33.2, easeOutCubic) * (1 - progress(time, 41.5, 45.0, easeInOutCubic));
+      const drainP = progress(time, 45.0, 48.0, easeOutBack);
+      const sealP = progress(time, 46.5, 49.5, easeOutCubic);
+
+      // Efek permukaan aspal basah mengilap halus saat hujan!
+      asphaltMat.clearcoat = lerp(0.16, 0.65, rainA);
+      asphaltMat.roughness = lerp(0.42, 0.24, rainA);
+
+      // Retakan zig-zag, Lumpur, Rongga, Batu, & Pecahan Aspal Retak 3D
+      crackGroup.scale.y = Math.max(0.001, crackP);
+      surfaceCrackGroup.visible = potholeP > 0.08;
+      surfaceCrackGroup.scale.setScalar(0.6 + potholeP * 0.45);
+      mudMat.opacity = seepP * 0.82;
+      voidMat.opacity = clamp(progress(time, 24.5, 30.0) * (1 - potholeP), 0, 0.92);
+      puddleMat.opacity = potholeP * 0.82;
+
+      for (const st of gravelStones) {
+        st.mesh.position.y = st.baseY - (st.inPit ? potholeP * 0.35 : 0);
+      }
+      for (const ch of centerChunks) {
+        ch.mesh.position.y = -0.3 - potholeP * ch.drop;
+        ch.mesh.rotation.z = potholeP * ch.tilt;
+        ch.mesh.rotation.y = potholeP * ch.rotY;
+      }
+
+      // Tetesan air 3D kecil & halus merembes turun lewat retakan
+      for (let d = 0; d < seepDrops.length; d++) {
+        const drop = seepDrops[d];
+        if (seepP > 0.05 && potholeP < 0.35) {
+          drop.visible = true;
+          const cyc = (time * 0.62 + d * 0.09) % 1;
+          drop.position.set(Math.sin(cyc * 8 + d) * 0.22 * cyc, lerp(-0.02, -2.25, cyc), ROAD_DEPTH / 2 + 0.06);
+        } else {
+          drop.visible = false;
+        }
+      }
+
+      // Solusi Babak 4: Drainase 3D + Tack Coat + Sealcoat
+      drainGroup.position.y = lerp(-2.0, 0.0, clamp(drainP, 0, 1.05));
+      drainWater.visible = rainA > 0.1 && time > 58.0;
+      tackCoat.scale.x = Math.max(0.001, sealP);
+      sealCoat.scale.x = Math.max(0.001, sealP);
+
+      // Kendaraan 3D (sinkron 61 detik!)
+      if (time >= 0.8 && time <= 8.8) {
+        redCar.visible = true;
+        redCar.position.x = lerp(-13, 13, progress(time, 0.8, 8.5));
+      } else {
+        redCar.visible = false;
+      }
+
+      if (time >= 29.0 && time <= 38.0) {
+        heavyTruck.visible = true;
+        const tx = lerp(-15, 15, progress(time, 29.0, 37.8));
+        heavyTruck.position.x = tx;
+        heavyTruck.position.y = Math.abs(tx) < 1.6 ? -0.18 : 0;
+      } else if (time >= 51.5 && time <= 60.8) {
+        heavyTruck.visible = true;
+        heavyTruck.position.x = lerp(-15, 15, progress(time, 51.5, 60.5));
+        heavyTruck.position.y = 0;
+      } else {
+        heavyTruck.visible = false;
+      }
+
+      // Pekerja 3D Helm Kuning
+      if (time >= 38.5 && time < 48.8) {
+        worker.position.x = lerp(2.85, 0.75, progress(time, 38.5, 40.0, easeInOutCubic)) + Math.sin(time * 3) * 0.5;
+        worker.position.y = Math.abs(Math.sin(time * 18)) * 0.06;
+        stamper.visible = true;
+      } else {
+        worker.position.x = time >= 48.8 ? lerp(0.75, 2.85, progress(time, 48.8, 50.4, easeInOutCubic)) : 2.85;
+        worker.position.y = time >= 31.8 && time < 33.2 ? Math.abs(Math.sin(time * 10)) * 0.35 : 0;
+        stamper.visible = false;
+      }
+
+      // Kamera 3D 1-Shot (sinkron 61 detik!)
+      let camX = 0, camY = 2.6, camZ = 15.2, lookY = -0.3;
+      if (time < 10.2) {
+        camX = Math.sin(time * 0.25) * 0.6;
+        camY = 2.6;
+        camZ = 15.2;
+        lookY = -0.25;
+      } else if (time < 28.8) {
+        const p = progress(time, 10.2, 12.2, easeInOutCubic);
+        camX = lerp(0, 0.2, p);
+        camY = lerp(2.6, -0.65, p);
+        camZ = lerp(15.2, 6.8, p);
+        lookY = lerp(-0.25, -1.15, p);
+      } else if (time < 38.0) {
+        const p = progress(time, 28.8, 30.2, easeInOutCubic);
+        camX = lerp(0.2, 0.4, p);
+        camY = lerp(-0.65, 1.55, p);
+        camZ = lerp(6.8, 11.8, p);
+        lookY = lerp(-1.15, -0.35, p);
+      } else if (time < 49.5) {
+        const p = progress(time, 38.0, 39.6, easeInOutCubic);
+        camX = lerp(0.4, 1.2, p);
+        camY = lerp(1.55, 1.85, p);
+        camZ = lerp(11.8, 10.6, p);
+        lookY = lerp(-0.35, -0.4, p);
+      } else {
+        const p = progress(time, 49.5, 51.4, easeInOutCubic);
+        camX = lerp(1.2, 0, p);
+        camY = lerp(1.85, 2.7, p);
+        camZ = lerp(10.6, 15.4, p);
+        lookY = lerp(-0.4, -0.25, p);
+      }
+      camera.position.set(camX, camY, camZ);
+      camera.lookAt(0, lookY, 0);
+
+      renderer.render(scene, camera);
+
+      // Composite 3D + Watermark + Subtitle Karaoke
+      compCtx.clearRect(0, 0, W, H);
+      compCtx.drawImage(glCanvas, 0, 0);
+
+      if (wmImg.complete && wmImg.naturalWidth > 0) {
+        const drawH = 78;
+        const drawW = drawH * (wmImg.naturalWidth / wmImg.naturalHeight);
+        compCtx.save();
+        compCtx.globalAlpha = 0.9;
+        compCtx.drawImage(wmImg, 38, 108, drawW, drawH);
+        compCtx.restore();
+      }
+
+      drawSubtitles(compCtx, ASPHALT_POTHOLE_SUBTITLES, time, W, H);
+    }
+
+    // =========================================================================
+    // 11. AUDIO + PLAYBACK + ONE-CLICK RECORD VIDEO 3D
+    // =========================================================================
+    let currentTime = 0;
+    let isPlaying = true;
+    let lastTs = performance.now();
+
+    const scrubber = document.getElementById('scrubber');
+    const timeLabel = document.getElementById('timeLabel');
+    const actLabel = document.getElementById('actLabel');
+    const playBtn = document.getElementById('playBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const recordBtn = document.getElementById('recordBtn');
+    const statusBox = document.getElementById('statusBox');
+
+    function getActName(t) {
+      if (t < 13.5) return 'Babak 1: Jalan Baru Mulus';
+      if (t < 32.5) return 'Babak 2: Macro Retak & Air';
+      if (t < 45.5) return 'Babak 3: Truk Lewat -> Lubang';
+      return 'Babak 4: Solusi Drainase & Seal';
+    }
+
+    function tick(now) {
+      const dt = Math.min(0.05, (now - lastTs) / 1000);
+      lastTs = now;
+      if (isPlaying) {
+        currentTime += dt;
+        if (currentTime > DURATION) currentTime = 0;
+      }
+      updateScene3D(currentTime);
+      scrubber.value = currentTime.toFixed(2);
+      timeLabel.textContent = `${currentTime.toFixed(2)}s / ${DURATION.toFixed(1)}s`;
+      actLabel.textContent = getActName(currentTime);
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    playBtn.onclick = () => {
+      isPlaying = !isPlaying;
+      playBtn.textContent = isPlaying ? 'Pause' : 'Play';
+      if (isPlaying) {
+        voAudio.currentTime = currentTime;
+        voAudio.play().catch(() => {});
+      } else {
+        voAudio.pause();
+      }
+    };
+    restartBtn.onclick = () => {
+      currentTime = 0;
+      isPlaying = true;
+      playBtn.textContent = 'Pause';
+      voAudio.currentTime = 0;
+      voAudio.play().catch(() => {});
+    };
+    scrubber.oninput = () => {
+      currentTime = Number(scrubber.value);
+      voAudio.currentTime = currentTime;
+      updateScene3D(currentTime);
+    };
+    document.querySelectorAll('.markers button').forEach((btn) => {
+      btn.onclick = () => {
+        currentTime = Number(btn.dataset.t);
+        isPlaying = true;
+        playBtn.textContent = 'Pause';
+        voAudio.currentTime = currentTime;
+        voAudio.play().catch(() => {});
+      };
+    });
+
+    recordBtn.onclick = () => {
+      recordBtn.disabled = true;
+      currentTime = 0;
+      isPlaying = true;
+      statusBox.textContent = 'Merekam video 3D real-time (68 detik)...';
+
+      const stream = compCanvas.captureStream(30);
+      const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+      const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8000000 });
+      const chunks = [];
+      rec.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      rec.onstop = () => {
+        const blob = new Blob(chunks, { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'jalan-aspal-berlubang-3d.webm';
+        a.click();
+        recordBtn.disabled = false;
+        statusBox.textContent = 'Selesai! File jalan-aspal-berlubang-3d.webm terunduh.';
+      };
+      rec.start();
+      setTimeout(() => rec.stop(), DURATION * 1000 + 250);
+    };
+  </script>
+</body>
+</html>

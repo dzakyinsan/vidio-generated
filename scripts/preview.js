@@ -170,7 +170,14 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const relPath = urlPath === '/' ? 'preview/index.html' : urlPath.replace(/^\/+/, '');
+  const relPath =
+    urlPath === '/'
+      ? 'preview/index.html'
+      : urlPath === '/studio3d'
+      ? 'preview/studio3d.html'
+      : urlPath === '/road3d'
+      ? 'preview/road3d.html'
+      : urlPath.replace(/^\/+/, '');
   const filePath = path.resolve(ROOT_DIR, relPath);
 
   // Cegah path traversal keluar dari root project

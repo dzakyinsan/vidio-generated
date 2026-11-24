@@ -1,0 +1,26 @@
+================================================================
+SCRIPT VOICEOVER — RAHASIA GRAFIK GTA VI: CARA KERJA KOMPUTER (106 DETIK)
+================================================================
+Gaya bicara : Energik, penuh rasa ingin tahu, seru seperti kanal fakta teknologi
+Sinkron     : src/scenes/computerWorks.js & src/scenes/computerWorksSubtitles.js
+
+----------------------------------------------------------------
+1. VERSI SIAP PASTE KE ELEVENLABS (Multilingual v2, Speed ~1.05)
+----------------------------------------------------------------
+Tahukah kamu bagaimana game seperti GTA enam bisa punya grafik super realistis dan kota yang terasa hidup di layarmu? Di balik satu klik Play, ada jutaan bahkan miliaran proses kecil di komputermu yang bekerja secepat kilat! <break time="0.3s" />
+Pertama, CPU adalah otak komputer yang bertugas menjalankan instruksi dan perhitungan untuk mengatur ratusan NPC, lalu lintas, hingga fisika di dalam kota GTA enam. <break time="0.3s" />
+Kedua, begitu kamu masuk ke dalam game, peta dan tekstur dimuat dari SSD ke RAM. RAM berfungsi sebagai meja kerja sementara agar CPU bisa mengakses data game dengan super cepat. <break time="0.3s" />
+Ketiga, berbeda dari SSD, RAM bersifat volatile. Artinya, kalau listrik mendadak mati, semua data aktif di RAM langsung hilang—itulah kenapa progres game harus disimpan ke SSD! <break time="0.3s" />
+Keempat, CPU punya memori khusus bernama Cache di dalam chip-nya. Data yang paling sering dipakai saat aksi seru disimpan di sini, dan kecepatannya jauh lebih kencang daripada RAM! <break time="0.3s" />
+Kelima, prosesor modern punya banyak Core, seperti 8 Core dan 16 Thread. Jadi suara, fisika mobil, dan AI polisi bisa dikerjakan secara paralel bersamaan! <break time="0.3s" />
+Keenam, SSD menyimpan file game yang sangat besar secara permanen, sedangkan RAM menampung area yang sedang kamu mainkan. Jadi meski SSD kamu besar, komputer tetap butuh RAM agar game berjalan mulus. <break time="0.3s" />
+Ketujuh, inilah bintang di balik grafik realistis GTA enam: GPU! Selain merender cahaya, bayangan, dan efek air di game, GPU juga dipakai untuk video 3D, rendering, hingga komputasi kecerdasan buatan. <break time="0.3s" />
+Kedelapan, semua komponen hebat ini tidak bekerja sendirian. Ada Motherboard yang menghubungkan CPU, RAM, SSD, dan GPU agar saling bertukar data setiap milidetik. <break time="0.3s" />
+Kesembilan, prosesor modern menjalankan miliaran siklus clock setiap detik! Itulah rahasia kenapa puluhan frame per detik bisa tampil mulus tanpa patah-patah. <break time="0.3s" />
+Kesepuluh, bahkan saat game sudah ditutup dan komputer terlihat diam, sistem operasi tetap sibuk di belakang layar—mengelola memori, memeriksa perangkat, dan menjalankan berbagai layanan latar belakang. <break time="0.3s" />
+Follow untuk fakta teknologi menarik lainnya!
+
+----------------------------------------------------------------
+CATATAN:
+Simpan file hasil ElevenLabs ke: assets/audio/voiceover-computer-works.mp3
+================================================================

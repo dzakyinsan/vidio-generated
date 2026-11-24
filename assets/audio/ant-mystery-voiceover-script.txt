@@ -1,0 +1,23 @@
+================================================================
+SCRIPT VOICEOVER — RAHASIA SEMUT TEMUKAN MAKANAN DI TEMPAT TERTUTUP (68 DETIK)
+================================================================
+Gaya bicara : Seru, rasa ingin tahu tinggi, santai & jelas
+Sinkron     : src/scenes/antMystery.js & src/scenes/antMysterySubtitles.js
+
+----------------------------------------------------------------
+1. VERSI SIAP PASTE KE ELEVENLABS (Multilingual v2, Speed ~1.02)
+----------------------------------------------------------------
+Baru taruh makanan di rak tinggi dan ditutup rapat, awalnya kelihatan aman. <break time="0.3s" />
+Tapi nggak lama, kok tiba-tiba dikerubungi semut? <break time="0.3s" />
+Sebenarnya, semut pengintai mereka sudah berpatroli dua puluh empat jam di seluruh rumahmu! <break time="0.3s" />
+Tutup toples yang terasa rapat sering masih menyisakan celah satu milimeter. Antena super sensitif semut langsung mencium aroma manisnya. Dengan kaki lengket khusus, ia bisa memanjat kaca dengan mudah lalu menyusup masuk! <break time="0.3s" />
+Setelah menemukan makanan, ia berjalan pulang sambil meneteskan jejak kimia bernama feromon. Jejak ini berubah menjadi jalan tol GPS bagi pasukan semut lainnya — makin banyak yang lewat, makin kuat aromanya! <break time="0.3s" />
+Makanya dalam hitungan menit, toples langsung penuh semut. Jadi mereka bukan teleportasi, melainkan mengikuti jejak feromon. <break time="0.4s" />
+Solusinya gampang! Pertama, lap jalur semut memakai air sabun atau cuka. Ini langsung menghapus jejak feromon sehingga semut kehilangan arah dan balik kanan. <break time="0.3s" />
+Kedua, simpan makanan di wadah dengan seal karet kedap udara. Tanpa celah dan tanpa bocor aroma, dapurmu aman bebas semut! <break time="0.3s" />
+Follow untuk fakta sains menarik lainnya!
+
+----------------------------------------------------------------
+CATATAN:
+Simpan file hasil ElevenLabs ke: assets/audio/voiceover-ant-mystery.mp3
+================================================================
